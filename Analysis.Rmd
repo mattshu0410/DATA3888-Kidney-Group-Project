@@ -1,0 +1,113 @@
+---
+title: "Main Analysis"
+author: Matthew Shu; Raymond Huang; Hugo Ohlsson; Vasu Paliwal; Ruestam Bhangal; Jiani
+  Tan
+date: "03/04/2022"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r, results='hide', warning=FALSE, message=FALSE}
+library(tidyverse)
+library(devtools)
+library(ggplot2)
+library(stringr)
+library(stringdist)
+library(GEOquery) 
+library(R.utils)
+library(Biobase)
+library(reshape2)
+library(ggplot2)
+library(limma)
+library(stats)
+library(blorr)
+library(viridis)
+library(plotly)
+library(ggrepel)
+```
+
+# Datasets Ingestion & Cleaning
+
+## GSE36059
+
+https://www.sciencedirect.com/science/article/pii/S0085253815561863#bb0095
+
+
+
+Human leukocyte antigen (HLA) antibodies were initially recognised as responsible for the immediate, hyperacute rejection of kidney grafts. Later we began to distinguish between two more types of rejection.
+
+*  TCMR (T-cell Mediated Rejection) 
+*  ABMR (Antibody Mediated Rejection)
+
+C4d is a complement component i.e. molecule that tends to build up in the peritubular capillaries of kidneys, and was found to be a hallmark of anti-body mediated rejection. ABMR could both affect patients immediately (those who were presensitised) or much later due to de novo DSA production i.e. their body starting producing new antibodies against the donor's tissue. Both would eventually end up in end-stage renal failure.
+
+It seems that this research finds ABMR to be primarily linked to a high probability of end-stage renal failure whereas TCMR probability of renal failure actually decreases over time. Distinguishing these could provide crucial clinical details as timing is a major factor in decision making.
+
+![image](https://ars.els-cdn.com/content/image/1-s2.0-S0085253815561863-gr1.jpg)
+
+```{r}
+# Reading in Data
+GSE36059 = getGEO("GSE36059")
+GSE36059 = GSE36059$GSE36059_series_matrix.txt.gz
+
+# Example of functions that return patient data, feature data, expression matrix
+head(pData(GSE36059)[,1:5])
+head(fData(GSE36059)[,1:5])
+head(exprs(GSE36059)[,1:5])
+eMat_GSE36059 = exprs(GSE36059)
+
+# How to return gene names
+rownames(eMat_GSE36059)
+length(rownames(eMat_GSE36059))
+
+# Encode
+sort(pData(GSE36059)$title)
+#gse_GSE46474$Outcome = ifelse(grepl("AR", gse_GSE46474$title), "Rejection", "Stable")
+
+```
+
+## GSE48581
+
+https://onlinelibrary.wiley.com/doi/10.1111/ajt.12387
+
+This dataset could be troublesome as it seems like the paper itself is trying to create a model that can predict whether the rejection will be TCMR. The issue becomes how do we then definitively distinguish between TCMR and ABMR.
+
+```{r}
+GSE48581 = getGEO("GSE48581")
+GSE48581 = GSE48581$GSE48581_series_matrix.txt.gz
+
+eMat_GSE48581 = exprs(GSE48581)
+pData(GSE48581)$title
+rownames(eMat_GSE48581)
+length(rownames(eMat_GSE48581))
+```
+
+
+## GSE21374
+
+https://www.ncbi.nlm.nih.gov/pmc/articles/PMC2877953/
+
+This paper which the dataset belongs to, created a molecular classifier for predicting future graft loss.
+
+```{r}
+GSE21374 = getGEO("GSE21374")
+GSE21374 = GSE21374$GSE21374_series_matrix.txt.gz
+
+eMat_GSE21374 = exprs(GSE21374)
+pData(GSE48581)$source_name_ch1
+rownames(eMat_GSE21374)
+length(rownames(eMat_GSE21374))
+```
+
+# Joining & Merging
+
+
+```{r}
+
+setdiff(rownames(eMat_GSE48581), rownames(eMat_GSE21374))
+
+
+```
