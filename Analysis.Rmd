@@ -65,7 +65,7 @@ length(rownames(eMat_GSE36059))
 
 # Encode
 sort(pData(GSE36059)$title)
-#gse_GSE46474$Outcome = ifelse(grepl("AR", gse_GSE46474$title), "Rejection", "Stable")
+dim(GSE36059)
 
 ```
 
@@ -105,9 +105,32 @@ length(rownames(eMat_GSE21374))
 # Joining & Merging
 
 
+
+# Classifier Model for GSE36059
 ```{r}
-
-setdiff(rownames(eMat_GSE48581), rownames(eMat_GSE21374))
-
+count=0
+for(i in a$`diagnosis:ch1`){
+  if(i=="non-rejecting")
+{
+  GSE36059$outcome[count]="Stable"
+}else if(i=="ABMR")
+{
+  GSE36059$outcome[count]="LongTermRejection"
+}else if(i=="MIXED")
+{
+  GSE36059$outcome[count]="LongandShortTermRejection"
+}else if(i=="TCMR")
+{
+  GSE36059$outcome[count]="ShortTermRejection"
+}
+  count=count+1
+}
 
 ```
+
+
+```{r}
+
+```
+
+
