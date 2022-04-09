@@ -27,7 +27,13 @@ library(blorr)
 library(viridis)
 library(plotly)
 library(ggrepel)
+#BiocManager::install("sva")
 ```
+
+# Inspiration
+
+https://imageo.genyo.es/
+
 
 # Datasets Ingestion & Cleaning
 
@@ -67,13 +73,15 @@ length(rownames(eMat_GSE36059))
 sort(pData(GSE36059)$title)
 dim(GSE36059)
 
+
+
 ```
 
 ## GSE48581
 
 https://onlinelibrary.wiley.com/doi/10.1111/ajt.12387
 
-This dataset could be troublesome as it seems like the paper itself is trying to create a model that can predict whether the rejection will be TCMR. The issue becomes how do we then definitively distinguish between TCMR and ABMR.
+This dataset could be troublesome as it seems like the paper itself is trying to create a model that can predict whether the rejection will be TCMR. The issue becomes how do we then definitively distinguish between TCMR and ABMR. 
 
 ```{r}
 GSE48581 = getGEO("GSE48581")
@@ -90,25 +98,80 @@ length(rownames(eMat_GSE48581))
 
 https://www.ncbi.nlm.nih.gov/pmc/articles/PMC2877953/
 
-This paper which the dataset belongs to, created a molecular classifier for predicting future graft loss.
+This paper which the dataset belongs to, created a molecular classifier for predicting future graft loss. It also has a time to failure/census which is quite good.
 
 ```{r}
 GSE21374 = getGEO("GSE21374")
 GSE21374 = GSE21374$GSE21374_series_matrix.txt.gz
 
 eMat_GSE21374 = exprs(GSE21374)
-pData(GSE48581)$source_name_ch1
 rownames(eMat_GSE21374)
 length(rownames(eMat_GSE21374))
+fData(GSE21374)$`Gene Symbol`
+```
+
+## GSE98320
+
+This dataset has 1208 samples. The clustering contains information about the predicted category of the kidney transplant based on microarray data.
+
+Important to note that this dataset contains samples from GSE36059 & GSE48581 (See Methods of Paper below)
+https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5470931/
+
+This dataset also uses a slightly different platform GPL15207 and matching on the Gene Symbol shows that there are 17344 genes matching between this dataset and all the other datasets on a platform GPL570.
+
+In terms of the clustering in order they are: No Rejection, TCMR, ABMR, early-stage ABMR, fully-developed ABMR, late-stage ABMR
+*  
+
+```{r}
+GSE98320 = getGEO("GSE98320")
+GSE98320 = GSE98320$GSE98320_series_matrix.txt.gz
+
+fData(GSE98320)$`Gene Symbol`
+
+length(intersect(fData(GSE98320)$`Gene Symbol`, fData(GSE21374)$`Gene Symbol`))
+length(fData(GSE21374)$`Gene Symbol`)
+length(fData(GSE98320)$`Gene Symbol`)
+
+eMat_GSE98320 = exprs(GSE98320)
+pData(GSE98320)$geo_accession
+dim(eMat_GSE98320)
 ```
 
 # Joining & Merging
 
+Joining & merging datasets from different batches i.e. experiments is difficult because it's necessary to remove batch effects which are differences that are not clinically significant (technician, reagents, microarray chips, and other equipment). The following reference outlines many more possible causes.
+
+Problems with merging: https://www.nature.com/articles/tpj201057#
+
+In the past many other batch correction methods have been used e.g. mean centering & standardising variance. The standard way to do it now appears to be to use the ComBat method to batch-adjust the gene expression. It uses an empirical Bayes and is predicated on the notion that batch effects are systematic & affect many genes in a batch in a similar way e.g. (increasing expression or increasing variability.) It shrinks the batch effect parameter estimates towards the global mean of batch effect estimates.
+
+Original Batch Correction: https://academic.oup.com/biostatistics/article/8/1/118/252073
+In action: https://biodatamining.biomedcentral.com/articles/10.1186/s13040-020-00217-8
+
+
+```{r}
+browseVignettes("sva")
+
+GSE36059
+GSE48581
+GSE21374
+
+pData(GSE21374)
+
+```
 
 
 
 
 # Model Building
+
+We can use an ensemble of different classifiers and take the median probability to generate a more stable prediction. Stability of your model/process is particularly important.
+
+Methods section: https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5470931/
+
+We can potentially include a penalty for the comorbidities present in the transplant recipient by using the Charlson Comorbidity Score. However I can't find a dataset for this yet.
+https://pubmed.ncbi.nlm.nih.gov/29731067/
+
 
 ## Classifier Model for GSE36059
 ```{r}
