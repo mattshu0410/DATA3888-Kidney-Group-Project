@@ -160,4 +160,33 @@ for(i in a$`diagnosis:ch1`){
 
 ```
 
+# Explainability
 
+```{r}
+# Required package for biomaRt
+# BiocManager::install("biomaRt")
+library(biomaRt)
+ensembl = useMart("ensembl", dataset = "hsapiens_gene_ensembl")
+ensembl
+GB_ACC = fData(GSE36059)$GB_ACC
+dat = getBM(attributes = c("protein_id", "embl", "hgnc_symbol"), values = GB_ACC, mart = ensembl)
+
+
+```
+
+
+This library helps with the explainability by showing the molecular pathway that a gene is related to.
+
+```{r}
+library(msigdbr)
+
+# Get all species in this database
+msigdbr_species()
+
+# All gene sets of a humans
+all_gene_sets = msigdbr(species = "Homo sapiens")
+
+all_gene_sets %>%
+  filter(human_gene_symbol == "M87338")
+head(all_gene_sets)
+```
