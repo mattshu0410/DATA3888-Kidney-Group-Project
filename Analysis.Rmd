@@ -162,6 +162,7 @@ eMat_GSE21374 = exprs(GSE21374)
 rownames(eMat_GSE21374)
 length(rownames(eMat_GSE21374))
 fData(GSE21374)$`Gene Symbol`
+pData(GSE21374)
 ```
 
 ### GSE98320
@@ -187,8 +188,33 @@ length(fData(GSE21374)$`Gene Symbol`)
 length(fData(GSE98320)$`Gene Symbol`)
 
 eMat_GSE98320 = exprs(GSE98320)
-pData(GSE98320)$geo_accession
+pData(GSE98320)
 dim(eMat_GSE98320)
+```
+
+### GSE34748
+
+Transplant glomerulopathy can be attributed to ABMR as it is a histological sign of chronic tissue injury. The reference is below.
+https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8503253/
+
+Here the dataset contains data on 20 patients with transplant glomerulopathy which we will add as ABMR replicates.
+
+We have treated the control biopsies as no rejection as within this study, there were no circulating donor specific antibodies (DSA) after transplantation. It is possible that the immunosuppressive regime that the patient underwent may mask the diagnosis of TCMR. However, 
+
+```{r}
+
+GSE34748 = getGEO("GSE34748")
+GSE34748 = GSE34748$GSE34748_series_matrix.txt.gz
+GSE34748
+pData(GSE34748)$title
+```
+
+### GSE51675
+
+```{r}
+
+GSE51675 = getGEO("GSE51675")
+
 ```
 
 ### Further Cleaning
@@ -222,7 +248,7 @@ GSE48581
 GSE21374
 
 pData(GSE21374)
-
+p_GSE36059
 ```
 
 ## Relative Gene Expression
