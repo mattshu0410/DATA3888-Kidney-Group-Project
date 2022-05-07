@@ -386,13 +386,30 @@ hsa04110
 
 translated$ENTREZID[grepl("hsa05332", rownames(fc.kegg.sigmet.p.up), fixed=TRUE),]
 ```
+DisGeNET is a database of gene-disease associations.
+https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5210640/
+
+
 ```{r}
 # UNRESOLVED, KEEPS USING THE WRONG UNIQUE() FUNCTION WHAT THE FUCK
 library(DOSE)
-eMat_combined_ABMR
-cnetplot(foldChange = eMat_combined_ABMR)
-edo <- enrichDGN(de)
 
+
+
+# Using DisGeNET
+edo = enrichDGN(rownames(eMat_combined_ABMR_ENTREZID))
+edox = setReadable(edo, 'org.Hs.eg.db', 'ENTREZID')
+
+# Dataframe with gene-disease associations
+edo@result
+
+# 
+p1 = cnetplot(edox, 
+              categorySize="pvalue", 
+              foldChange = eMat_combined_ABMR_ENTREZID
+              )
+p1
+geneList
 ```
 
 
