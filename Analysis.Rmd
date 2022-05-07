@@ -28,6 +28,10 @@ library(viridis)
 library(plotly)
 library(ggrepel)
 library(CPOP)
+library(clusterProfiler)
+library(DOSE)
+library(org.Hs.eg.db)
+library(pathview)
 #BiocManager::install("sva")
 ```
 
@@ -84,11 +88,12 @@ C4d is a complement component i.e. molecule that tends to build up in the peritu
 It seems that this research finds ABMR to be primarily linked to a high probability of end-stage renal failure whereas TCMR probability of renal failure actually decreases over time. Distinguishing these could provide crucial clinical details as timing is a major factor in decision making.
 
 ![image](https://ars.els-cdn.com/content/image/1-s2.0-S0085253815561863-gr1.jpg)
+Entrez Gene ID are unique alphanumeric identifiers for genes and other loci.
 
 ```{r}
 # Reading in Data
-GSE36059 = getGEO("GSE36059")
-GSE36059 = GSE36059$GSE36059_series_matrix.txt.gz
+GEO_GSE36059 = getGEO("GSE36059")
+GSE36059 = GEO_GSE36059$GSE36059_series_matrix.txt.gz
 
 # Example of functions that return patient data, feature data, expression matrix
 head(pData(GSE36059)[,1:5])
@@ -101,7 +106,8 @@ length(rownames(eMat_GSE36059))
 
 # Load relevant matrices
 eMat_GSE36059 = exprs(GSE36059)
-p_GSE36059 = rename(pData(GSE36059), diagnosis = `diagnosis:ch1` )
+p_GSE36059 = rename(pData(GSE36059), diagnosis = `diagnosis:ch1`)
+p_GSE36059$diagnosis = gsub("non-rejecting", "NR", p_GSE36059$diagnosis)
 
 # Rows & patient id with control diagnosis of nephrectomy
 control_idx = which(p_GSE36059$diagnosis == "nephrectomy")
@@ -110,6 +116,28 @@ remove_patient_id = rownames(p_GSE36059)[control_idx]
 # Remove controls from patient and expression dataset
 p_GSE36059 = p_GSE36059[!(row.names(p_GSE36059) %in% remove_patient_id),]
 eMat_GSE36059 = eMat_GSE36059[, !(colnames(eMat_GSE36059) %in% remove_patient_id)]
+
+# Multiple probes test same genes
+sum(duplicated(fData(GSE36059)$`Gene Symbol`))
+
+# List of the main genes
+all_gene_symbols = unlist(lapply(strsplit(fData(GSE36059)$`Gene Symbol`, ' /// ', 1), `[`, 1))
+
+# Get index of probe_ids to keep which are not duplicates or have NA values
+#idx = which(!duplicated(fData(GSE36059)$`Gene Symbol`) & !is.na(fData(GSE36059)$`Gene Symbol`))
+idx = which(!duplicated(all_gene_symbols) & !is.na(fData(GSE36059)$`Gene Symbol`) & !(fData(GSE36059)$`Gene Symbol` == ""))
+# Remove duplicate gene probes & probes w/o gene names
+eMat_GSE36059 = eMat_GSE36059[idx,]
+
+# Print gene symbols
+gene_symbols = fData(GSE36059) %>%
+  select(ID, `Gene Symbol`) 
+kept_gene_symbols = gene_symbols[idx,] %>% pull(`Gene Symbol`)
+
+# Replace probe ids with gene names
+rownames(eMat_GSE36059) = lapply(strsplit(kept_gene_symbols, ' /// ', 1), `[`, 1)
+
+
 ```
 
 ### GSE48581
@@ -124,18 +152,22 @@ According to the paper above, nephrectomy is usually performed on patients with 
 The patients with nephrectomy were included as a baseline according to the original paper of this dataset.
 
 ```{r}
-GSE48581 = getGEO("GSE48581")
-GSE48581 = GSE48581$GSE48581_series_matrix.txt.gz
+GEO_GSE48581 = getGEO("GSE48581")
+GSE48581 = GEO_GSE48581$GSE48581_series_matrix.txt.gz
 
 # Load relevant matrices
 eMat_GSE48581 = exprs(GSE48581)
 p_GSE48581 = rename(pData(GSE48581), diagnosis = `diagnosis (tcmr, abmr, mixed, non-rejecting, nephrectomy):ch1` )
 
-# Rows & patient id with control diagnosis of nephrectomy
-control_idx = which(p_GSE48581$diagnosis == "nephrectomy")
+# Rename non-rejecting level
+p_GSE48581$diagnosis = gsub("non-rejecting", "NR", p_GSE48581$diagnosis)
+
+
+# Remove rows & patient id with control diagnosis of nephrectomy or mixed
+control_idx = which(p_GSE48581$diagnosis == "nephrectomy" | p_GSE48581$diagnosis == "mixed")
 remove_patient_id = rownames(p_GSE48581)[control_idx]
 
-# Remove controls from patient and expression dataset
+# Remove from patient and expression dataset
 p_GSE48581 = p_GSE48581[!(row.names(p_GSE48581) %in% remove_patient_id),]
 eMat_GSE48581 = eMat_GSE48581[, !(colnames(eMat_GSE48581) %in% remove_patient_id)]
 
@@ -143,79 +175,30 @@ eMat_GSE48581 = eMat_GSE48581[, !(colnames(eMat_GSE48581) %in% remove_patient_id
 p_GSE48581$diagnosis
 
 
-rownames(eMat_GSE48581)
-length(rownames(eMat_GSE48581))
+
+# Multiple probes test same genes
+sum(duplicated(fData(GSE48581)$`Gene Symbol`))
+
+# List of the main genes
+all_gene_symbols = unlist(lapply(strsplit(fData(GSE48581)$`Gene Symbol`, ' /// ', 1), `[`, 1))
+
+# Get index of probe_ids to keep which are not duplicates or have NA values
+#idx = which(!duplicated(fData(GSE48581)$`Gene Symbol`) & !is.na(fData(GSE48581)$`Gene Symbol`))
+idx = which(!duplicated(all_gene_symbols) & !is.na(fData(GSE48581)$`Gene Symbol`) & !(fData(GSE48581)$`Gene Symbol` == ""))
+# Remove duplicate gene probes & probes w/o gene names
+eMat_GSE48581 = eMat_GSE48581[idx,]
+
+# Print gene symbols
+gene_symbols = fData(GSE48581) %>%
+  select(ID, `Gene Symbol`) 
+kept_gene_symbols = gene_symbols[idx,] %>% pull(`Gene Symbol`)
+
+# Replace probe ids with gene names
+rownames(eMat_GSE48581) = lapply(strsplit(kept_gene_symbols, ' /// ', 1), `[`, 1)
 ```
 
 
-### GSE21374
 
-https://www.ncbi.nlm.nih.gov/pmc/articles/PMC2877953/
-
-This paper which the dataset belongs to, created a molecular classifier for predicting future graft loss. It also has a time to failure/census which is quite good.
-
-```{r}
-GSE21374 = getGEO("GSE21374")
-GSE21374 = GSE21374$GSE21374_series_matrix.txt.gz
-
-eMat_GSE21374 = exprs(GSE21374)
-rownames(eMat_GSE21374)
-length(rownames(eMat_GSE21374))
-fData(GSE21374)$`Gene Symbol`
-pData(GSE21374)
-```
-
-### GSE98320
-
-This dataset has 1208 samples. The clustering contains information about the predicted category of the kidney transplant based on microarray data.
-
-Important to note that this dataset contains samples from GSE36059 & GSE48581 (See Methods of Paper below)
-https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5470931/
-
-This dataset also uses a slightly different platform GPL15207 and matching on the Gene Symbol shows that there are 17344 genes matching between this dataset and all the other datasets on a platform GPL570.
-
-In terms of the clustering in order they are: No Rejection, TCMR, ABMR, early-stage ABMR, fully-developed ABMR, late-stage ABMR
-*  
-
-```{r}
-GSE98320 = getGEO("GSE98320")
-GSE98320 = GSE98320$GSE98320_series_matrix.txt.gz
-
-fData(GSE98320)$`Gene Symbol`
-
-length(intersect(fData(GSE98320)$`Gene Symbol`, fData(GSE21374)$`Gene Symbol`))
-length(fData(GSE21374)$`Gene Symbol`)
-length(fData(GSE98320)$`Gene Symbol`)
-
-eMat_GSE98320 = exprs(GSE98320)
-pData(GSE98320)
-dim(eMat_GSE98320)
-```
-
-### GSE34748
-
-Transplant glomerulopathy can be attributed to ABMR as it is a histological sign of chronic tissue injury. The reference is below.
-https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8503253/
-
-Here the dataset contains data on 20 patients with transplant glomerulopathy which we will add as ABMR replicates.
-
-We have treated the control biopsies as no rejection as within this study, there were no circulating donor specific antibodies (DSA) after transplantation. It is possible that the immunosuppressive regime that the patient underwent may mask the diagnosis of TCMR. However, 
-
-```{r}
-
-GSE34748 = getGEO("GSE34748")
-GSE34748 = GSE34748$GSE34748_series_matrix.txt.gz
-GSE34748
-pData(GSE34748)$title
-```
-
-### GSE51675
-
-```{r}
-
-GSE51675 = getGEO("GSE51675")
-
-```
 
 ### Further Cleaning
 
@@ -241,7 +224,6 @@ In action: https://biodatamining.biomedcentral.com/articles/10.1186/s13040-020-0
 
 
 ```{r}
-browseVignettes("sva")
 
 GSE36059
 GSE48581
@@ -253,29 +235,67 @@ p_GSE36059
 
 ## Relative Gene Expression
 
+https://www.researchgate.net/publication/289524168_Pathway_Analysis_State_of_the_Art
+
+This paper explains what we do which is first select for genes using Over Representation Analysis (ORA). THere is some evidence to suggest there are weaknesses to this method.
+
+https://www.pnas.org/doi/full/10.1073/pnas.0506580102
+
+The following can be used for justifying procedure.
+
+https://academic.oup.com/nar/article/43/7/e47/2414268?ref=https%3a%2f%2fgithubhelp.com&login=false
+
 ### Selecting Genes
 
-What is the justification for taking a union of the highest variability genes. Or should we take an intersection instead?
+#### Using limma on pairwise contrasts
 
 ```{r}
 library(DT)
 
-rownames(eMat_GSE48581)
-p_GSE48581$diagnosis
-
-# Linear Model for series of arrays
-design = model.matrix(~diagnosis, data = p_GSE48581)
+# limma on pairwise contrasts between ABMR/no-rejection and TCMR/no-rejection
+design = model.matrix(~0 + diagnosis, data = p_GSE48581)
+colnames(design) = gsub("diagnosis", "", colnames(design))
 fit = lmFit(eMat_GSE48581, design)
-fit = eBayes(fit)
+CM = makeContrasts(ABMR = ABMR - NR,
+                   TCMR = TCMR - NR,
+                   levels = design)
 
-## Without gene symbols
-tT = topTable(fit, n = Inf) 
-DT::datatable(round(tT[1:100, ], 2)) # rounding is important because you don't know your data an infinite number of signficant figures
+# For linear model fit of microarray data, compute estimated coefficients and standard errors for given contrasts
+fit2 = contrasts.fit(fit, contrast = CM[, "ABMR"])
+# Adjust standard errors towards empirical derived global value
+efit = eBayes(fit2, robust = TRUE)
+# Show how many genes were significant
+summary(decideTests(efit, adjust.method = "BH", p.value = 0.05))
+tT_ABMR = topTable(efit, n = Inf) %>% filter(adj.P.Val<0.05)
+# rounding because significant figures
+DT::datatable(round(tT_ABMR[1:100,], 2))
 
-## Adding gene symbols and get the top 20
-tT = topTable(fit, genelist=featureData[,"Gene Symbol"], n = 20)
+# Finds intersection of genes significant in both datasets
+genes_selected_ABMR = rownames(tT_ABMR)
+
+# For linear model fit of microarray data, compute estimated coefficients and standard errors for given contrasts
+fit2 = contrasts.fit(fit, contrast = CM[, "TCMR"])
+# Adjust standard errors towards empirical derived global value
+efit = eBayes(fit2, robust = TRUE)
+# Show how many genes were significant
+summary(decideTests(efit, adjust.method = "BH", p.value = 0.05))
+tT_TCMR = topTable(efit, n = Inf) %>% filter(adj.P.Val<0.05)
+ # rounding because significant figures
+DT::datatable(round(tT_TCMR[1:100, ], 2))
+
+genes_selected_TCMR =  rownames(tT_TCMR)
+
+# Get list of signficant genes as text file for submission to DAVID
+mylist = unlist(lapply(strsplit(genes_selected, ' /// ', 1), `[`, 1)) 
+lapply(mylist, write, "test.txt", append=TRUE)
+```
 
 
+#### Highest Variability
+
+This is an alternative method to select genes.
+
+```{r}
 # High Variability
 
 large_var_GSE48581 = apply(eMat_GSE48581, 1, var)
@@ -292,7 +312,94 @@ genes_selected = intersect(GSE48581_top50, GSE36059_top50)
 
 ```
 
+#### KEGG Enrichment Analysis
+
+```{r}
+#search_kegg_organism('hsa', by='kegg_code')
+data(geneList, package = 'DOSE')
+data.frame(geneList)
+
+# Biological ID Translator
+translated = bitr(rownames(eMat_GSE48581_reduced),
+                  fromType = "SYMBOL",
+                  toType = "ENTREZID",
+                  OrgDb = "org.Hs.eg.db"
+                  )
+
+
+# Combined datasets into matrix
+eMat_combined = cbind(eMat_GSE48581, eMat_GSE36059)
+
+# Get only genes relevant to ABMR and TCMR respectively
+eMat_combined_ABMR = eMat_combined[genes_selected_ABMR,]
+eMat_combined_TCMR = eMat_combined[genes_selected_TCMR,]
+
+# Get ABMR genes
+translated_ABMR = bitr(rownames(eMat_combined_ABMR),
+     fromType = "SYMBOL",
+     toType = "ENTREZID",
+     OrgDb = "org.Hs.eg.db"
+     )
+
+# Get TCMR genes
+translated_TCMR = bitr(rownames(eMat_combined_TCMR),
+     fromType = "SYMBOL",
+     toType = "ENTREZID",
+     OrgDb = "org.Hs.eg.db"
+     )
+
+
+
+eMat_combined_ABMR_ENTREZID = eMat_combined_ABMR[which(rownames(eMat_combined_ABMR) %in% translated_ABMR$SYMBOL), ]
+rownames(eMat_combined_ABMR_ENTREZID) = translated_ABMR$ENTREZID
+
+#UNSOLVED WHY THE FUCK IS THERE ONE EXTRA INDEX
+eMat_combined_TCMR_ENTREZID = eMat_combined_TCMR[which(rownames(eMat_combined_TCMR) %in% translated_TCMR$SYMBOL), ]
+rownames(eMat_combined_TCMR_ENTREZID) = translated_TCMR$ENTREZID
+
+length(rownames(eMat_combined_TCMR_ENTREZID))
+length(translated_TCMR$ENTREZID)
+
+bitr(rownames(eMat_combined_ABMR_ENTREZID),
+     fromType = "SYMBOL",
+     toType = "ENTREZID",
+     OrgDb = "org.Hs.eg.db"
+     )
+
+sum(duplicated(translated_TCMR$ENTREZID))
+kk = enrichKEGG(gene = translated$ENTREZID,
+                organism = 'hsa',
+                pvalueCutoff = 0.05)
+
+# Shows upregulated pathways
+head(kk)
+
+
+browseKEGG(kk, 'hsa05332')
+
+hsa04110 <- pathview(gene.data  = geneList,
+                     pathway.id = "hsa05332",
+                     species    = "hsa",
+                     limit      = list(gene=max(abs(geneList)), cpd=1))
+
+hsa04110
+
+translated$ENTREZID[grepl("hsa05332", rownames(fc.kegg.sigmet.p.up), fixed=TRUE),]
+```
+```{r}
+# UNRESOLVED, KEEPS USING THE WRONG UNIQUE() FUNCTION WHAT THE FUCK
+library(DOSE)
+eMat_combined_ABMR
+cnetplot(foldChange = eMat_combined_ABMR)
+edo <- enrichDGN(de)
+
+```
+
+
 ### Pairwise Expression Ratios
+
+Justification for pairwise expression ratios.
+https://bmcbioinformatics.biomedcentral.com/articles/10.1186/s12859-018-2261-8
 
 This code is technically not used at the moment since the package CPOP already calculates pairwise differences i.e. log fold ratios for us, however I think it is good to have here since we need to manually calculate log-fold ratios for new inferences.
 
@@ -334,14 +441,19 @@ https://sydneybiox.github.io/CPOP/articles/CPOP.html
 #### For Non-rejection & TCMR
 
 ```{r}
+
+eMat_GSE48581_reduced = eMat_GSE48581[genes_selected,]
+eMat_GSE36059_reduced = eMat_GSE36059[genes_selected,]
+
+
 # Finds patients whom are either non-rejection or TCMR
-indx = which(p_GSE48581$diagnosis == 'non-rejecting' | p_GSE48581$diagnosis == 'TCMR')
+indx = which(p_GSE48581$diagnosis == 'NR' | p_GSE48581$diagnosis == 'TCMR')
 
 # Selects the correct patients from gene expression ratios & outcomes
 x1 = t(eMat_GSE48581_reduced[, indx])
 y1 = factor(p_GSE48581$diagnosis[indx])
 
-indx = which(p_GSE36059$diagnosis == 'non-rejecting' | p_GSE36059$diagnosis == 'TCMR')
+indx = which(p_GSE36059$diagnosis == 'NR' | p_GSE36059$diagnosis == 'TCMR')
 
 x2 = t(eMat_GSE36059_reduced[, indx])
 y2 = factor(p_GSE36059$diagnosis[indx])
@@ -359,8 +471,6 @@ cpop_result = cpop_model(
 ```{r}
 #plot_cpop(cpop_result = cpop_result, type = "text")
 
-cpop_result$z1
-
 #names(cpop_result)
 
 # This creates final joined dataframe based on selected gene combinations
@@ -370,19 +480,28 @@ tcmr_nonrej_outcome = c(y1, y2)
 
 ```
 
+#### Network Plot - TCMR
+
+```{r}
+plot_cpop(cpop_result = cpop_result, type = "ggraph")
+
+
+
+```
+
 #### For Non-rejection & ABMR
 
 Same as before.
 
 ```{r}
 # Finds patients whom are either non-rejection or TCMR
-indx = which(p_GSE48581$diagnosis == 'non-rejecting' | p_GSE48581$diagnosis == 'ABMR')
+indx = which(p_GSE48581$diagnosis == 'NR' | p_GSE48581$diagnosis == 'ABMR')
 
 # Selects the correct patients from gene expression ratios & outcomes
 x1 = t(eMat_GSE48581_reduced[, indx])
 y1 = factor(p_GSE48581$diagnosis[indx])
 
-indx = which(p_GSE36059$diagnosis == 'non-rejecting' | p_GSE36059$diagnosis == 'ABMR')
+indx = which(p_GSE36059$diagnosis == 'NR' | p_GSE36059$diagnosis == 'ABMR')
 
 x2 = t(eMat_GSE36059_reduced[, indx])
 y2 = factor(p_GSE36059$diagnosis[indx])
@@ -398,13 +517,13 @@ cpop_result = cpop_model(
 
 ```{r}
 
-cpop_result$z1
-
 # This creates final joined dataframe based on selected gene combinations
 abmr_nonrej_features = bind_rows(data.frame(cpop_result$z1, check.names = FALSE), data.frame(cpop_result$z2, check.names = FALSE)) %>%
   select(cpop_result$feature)
 abmr_nonrej_outcome = c(y1, y2)
 ```
+
+
 
 
 
@@ -424,7 +543,7 @@ cross_validation = function(n, cvK, n_sim, X, y){
   
   for (i in 1:n_sim) {
     cvSets =  cvTools::cvFolds(n, cvK)  # permute all the data, into 5 folds
-    cv_acc_rf = c()
+    cv_acc_knn = cv_acc_svm = cv_acc_rf = c()
   
     for (j in 1:cvK) {
       test_id = cvSets$subsets[cvSets$which == j]
@@ -433,9 +552,23 @@ cross_validation = function(n, cvK, n_sim, X, y){
       y_test = y[test_id]
       y_train = y[-test_id]
       
+      ## KNN - 5 Nearest Neighbours
+      fit5 = class::knn(
+        train = X_train,
+        test = X_test,
+        cl = y_train,
+        k=5
+      )
+      cv_acc_knn[j] = mean(y_test == fit5)
+      
+      ## SVM
+      svm_res = e1071::svm(x = X_train, y = as.factor(y_train))
+      fit = predict(svm_res, X_test)
+      cv_acc_svm[j] = mean(y_test == fit)
+  
       ## Random Forest
-      rf_res = randomForest::randomForest(x = X_train, y = as.factor(y_train))
-      fit = predict(rf_res, X_test)
+      rf_res <- randomForest::randomForest(x = X_train, y = as.factor(y_train))
+      fit <- predict(rf_res, X_test)
       cv_acc_rf[j] = mean(y_test == fit)
     }
     cv_rep_acc_rf = append(cv_rep_acc_rf, mean(cv_acc_rf))
@@ -511,7 +644,10 @@ for(i in a$`diagnosis:ch1`){
 
 ## Model Selection
 
-
+Support Vector Machine
+Random Forest
+KNN
+https://bmcbioinformatics.biomedcentral.com/articles/10.1186/s12859-017-1925-0
 
 
 
@@ -566,3 +702,76 @@ all_gene_sets %>%
   filter(human_gene_symbol == "M87338")
 head(all_gene_sets)
 ```
+
+
+## Junk Code
+
+### GSE21374
+
+https://www.ncbi.nlm.nih.gov/pmc/articles/PMC2877953/
+
+This paper which the dataset belongs to, created a molecular classifier for predicting future graft loss. It also has a time to failure/census which is quite good.
+
+```{r}
+GSE21374 = getGEO("GSE21374")
+GSE21374 = GSE21374$GSE21374_series_matrix.txt.gz
+
+eMat_GSE21374 = exprs(GSE21374)
+rownames(eMat_GSE21374)
+length(rownames(eMat_GSE21374))
+fData(GSE21374)$`Gene Symbol`
+pData(GSE21374)
+```
+
+### GSE98320
+
+This dataset has 1208 samples. The clustering contains information about the predicted category of the kidney transplant based on microarray data.
+
+Important to note that this dataset contains samples from GSE36059 & GSE48581 (See Methods of Paper below)
+https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5470931/
+
+This dataset also uses a slightly different platform GPL15207 and matching on the Gene Symbol shows that there are 17344 genes matching between this dataset and all the other datasets on a platform GPL570.
+
+In terms of the clustering in order they are: No Rejection, TCMR, ABMR, early-stage ABMR, fully-developed ABMR, late-stage ABMR
+*  
+
+```{r}
+GSE98320 = getGEO("GSE98320")
+GSE98320 = GSE98320$GSE98320_series_matrix.txt.gz
+
+fData(GSE98320)$`Gene Symbol`
+
+length(intersect(fData(GSE98320)$`Gene Symbol`, fData(GSE21374)$`Gene Symbol`))
+length(fData(GSE21374)$`Gene Symbol`)
+length(fData(GSE98320)$`Gene Symbol`)
+
+eMat_GSE98320 = exprs(GSE98320)
+pData(GSE98320)
+dim(eMat_GSE98320)
+```
+
+### GSE34748
+
+Transplant glomerulopathy can be attributed to ABMR as it is a histological sign of chronic tissue injury. The reference is below.
+https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8503253/
+
+Here the dataset contains data on 20 patients with transplant glomerulopathy which we will add as ABMR replicates.
+
+We have treated the control biopsies as no rejection as within this study, there were no circulating donor specific antibodies (DSA) after transplantation. It is possible that the immunosuppressive regime that the patient underwent may mask the diagnosis of TCMR. However, 
+
+```{r}
+
+GSE34748 = getGEO("GSE34748")
+GSE34748 = GSE34748$GSE34748_series_matrix.txt.gz
+GSE34748
+pData(GSE34748)$title
+```
+
+### GSE51675
+
+```{r}
+
+GSE51675 = getGEO("GSE51675")
+
+```
+
