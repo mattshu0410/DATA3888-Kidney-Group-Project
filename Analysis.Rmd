@@ -252,42 +252,52 @@ https://academic.oup.com/nar/article/43/7/e47/2414268?ref=https%3a%2f%2fgithubhe
 ```{r}
 library(DT)
 
-# limma on pairwise contrasts between ABMR/no-rejection and TCMR/no-rejection
-design = model.matrix(~0 + diagnosis, data = p_GSE48581)
-colnames(design) = gsub("diagnosis", "", colnames(design))
-fit = lmFit(eMat_GSE48581, design)
-CM = makeContrasts(ABMR = ABMR - NR,
-                   TCMR = TCMR - NR,
-                   levels = design)
+# Takes lmFit model, contrast matrix, condition (ABMR or TCMR), returns top table dataframe & genes selected
+ORA_contrasts = function(fit, contrast_matrix, condition){
+  # For linear model fit of microarray data, compute estimated coefficients and standard errors for given contrasts
+  constrast_fit = contrasts.fit(fit, contrast = contrast_matrix[, condition])
+  # Adjust standard errors towards empirical derived global value
+  efit = eBayes(constrast_fit, robust = TRUE)
+  # Show how many genes were significant
+  #summary(decideTests(efit, adjust.method = "BH", p.value = 0.05))
+  tT = topTable(efit, n = Inf) %>% filter(adj.P.Val<0.05)
+  # Rounding because significant figures
+  DT::datatable(round(tT_ABMR[1:100,], 2))
+  return(tT)
+}
 
-# For linear model fit of microarray data, compute estimated coefficients and standard errors for given contrasts
-fit2 = contrasts.fit(fit, contrast = CM[, "ABMR"])
-# Adjust standard errors towards empirical derived global value
-efit = eBayes(fit2, robust = TRUE)
-# Show how many genes were significant
-summary(decideTests(efit, adjust.method = "BH", p.value = 0.05))
-tT_ABMR = topTable(efit, n = Inf) %>% filter(adj.P.Val<0.05)
-# rounding because significant figures
-DT::datatable(round(tT_ABMR[1:100,], 2))
+# Takes pData with diagnosis column at levels ("ABMR", "TCMR", "NR"), expression matrix, returns list of topTables
+get_ORA_genes = function(patient_data, expression_matrix) {
+  design = model.matrix(~0 + diagnosis, data = patient_data)
+  colnames(design) = gsub("diagnosis", "", colnames(design))
+  fit = lmFit(expression_matrix, design)
+  CM = makeContrasts(ABMR = ABMR - NR,
+                     TCMR = TCMR - NR,
+                     levels = design)
+  tT_ABMR = ORA_contrasts(fit, CM, "ABMR")
+  tT_TCMR = ORA_contrasts(fit, CM, "TCMR")
+  return(list("tT_ABMR" = tT_ABMR, "tT_TCMR" = tT_TCMR))
+}
 
-# Finds intersection of genes significant in both datasets
-genes_selected_ABMR = rownames(tT_ABMR)
 
-# For linear model fit of microarray data, compute estimated coefficients and standard errors for given contrasts
-fit2 = contrasts.fit(fit, contrast = CM[, "TCMR"])
-# Adjust standard errors towards empirical derived global value
-efit = eBayes(fit2, robust = TRUE)
-# Show how many genes were significant
-summary(decideTests(efit, adjust.method = "BH", p.value = 0.05))
-tT_TCMR = topTable(efit, n = Inf) %>% filter(adj.P.Val<0.05)
- # rounding because significant figures
-DT::datatable(round(tT_TCMR[1:100, ], 2))
+tT_ABMR_48581 = get_ORA_genes(p_GSE48581, eMat_GSE48581)$tT_ABMR
+tT_ABMR_36059 = get_ORA_genes(p_GSE36059, eMat_GSE36059)$tT_ABMR
 
-genes_selected_TCMR =  rownames(tT_TCMR)
-
-# Get list of signficant genes as text file for submission to DAVID
-mylist = unlist(lapply(strsplit(genes_selected, ' /// ', 1), `[`, 1)) 
-lapply(mylist, write, "test.txt", append=TRUE)
+# TESTING BELOW
+genes_selected = intersect(rownames(tT_ABMR_36059), rownames(tT_ABMR_48581))
+tT_ABMR_36059
+FC_ABMR = tT_ABMR_36059 %>% 
+  dplyr::select(logFC) %>% 
+  filter(rownames(tT_ABMR_36059) %in% genes_selected)
+translated = bitr(rownames(FC_ABMR),
+                  fromType = "SYMBOL",
+                  toType = "ENTREZID",
+                  OrgDb = "org.Hs.eg.db"
+                  )
+FC_ABMR_ENTREZID = FC_ABMR %>%
+  filter(rownames(FC_ABMR) %in% translated$SYMBOL)
+row.names(FC_ABMR_ENTREZID) = translated$ENTREZID
+FC_ABMR_ENTREZID
 ```
 
 
@@ -333,6 +343,8 @@ eMat_combined = cbind(eMat_GSE48581, eMat_GSE36059)
 # Get only genes relevant to ABMR and TCMR respectively
 eMat_combined_ABMR = eMat_combined[genes_selected_ABMR,]
 eMat_combined_TCMR = eMat_combined[genes_selected_TCMR,]
+FC_TCMR = tT_TCMR[genes_selected_TCMR,]
+FC_ABMR = tT_ABMR[genes_selected_ABMR,]
 
 # Get ABMR genes
 translated_ABMR = bitr(rownames(eMat_combined_ABMR),
@@ -348,8 +360,22 @@ translated_TCMR = bitr(rownames(eMat_combined_TCMR),
      OrgDb = "org.Hs.eg.db"
      )
 
+# Get gene list with ENTREZID
 
+FC_ABMR_ENTREZID = FC_ABMR %>% 
+  dplyr::select(logFC) %>% 
+  filter(row.names(tT_ABMR) %in% translated_ABMR$SYMBOL)
+  
+row.names(FC_ABMR_ENTREZID) = translated_ABMR$ENTREZID
 
+#UNSOLVED WHY THE FUCK IS THERE ONE EXTRA INDEX
+FC_TCMR_ENTREZID = FC_TCMR %>% 
+  dplyr::select(logFC) %>% 
+  filter(row.names(tT_TCMR) %in% translated_TCMR$SYMBOL)
+  
+row.names(FC_TCMR_ENTREZID) = translated_TCMR$ENTREZID
+
+# Get combined expression matrix with ENTREZID
 eMat_combined_ABMR_ENTREZID = eMat_combined_ABMR[which(rownames(eMat_combined_ABMR) %in% translated_ABMR$SYMBOL), ]
 rownames(eMat_combined_ABMR_ENTREZID) = translated_ABMR$ENTREZID
 
@@ -357,8 +383,10 @@ rownames(eMat_combined_ABMR_ENTREZID) = translated_ABMR$ENTREZID
 eMat_combined_TCMR_ENTREZID = eMat_combined_TCMR[which(rownames(eMat_combined_TCMR) %in% translated_TCMR$SYMBOL), ]
 rownames(eMat_combined_TCMR_ENTREZID) = translated_TCMR$ENTREZID
 
-length(rownames(eMat_combined_TCMR_ENTREZID))
-length(translated_TCMR$ENTREZID)
+
+
+
+
 
 bitr(rownames(eMat_combined_ABMR_ENTREZID),
      fromType = "SYMBOL",
@@ -386,6 +414,7 @@ hsa04110
 
 translated$ENTREZID[grepl("hsa05332", rownames(fc.kegg.sigmet.p.up), fixed=TRUE),]
 ```
+
 DisGeNET is a database of gene-disease associations.
 https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5210640/
 
@@ -394,22 +423,24 @@ https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5210640/
 # UNRESOLVED, KEEPS USING THE WRONG UNIQUE() FUNCTION WHAT THE FUCK
 library(DOSE)
 
-
+geneList = setNames(FC_ABMR_ENTREZID$logFC, rownames(FC_ABMR_ENTREZID))
 
 # Using DisGeNET
-edo = enrichDGN(rownames(eMat_combined_ABMR_ENTREZID))
+edo = enrichDGN(names(geneList))
 edox = setReadable(edo, 'org.Hs.eg.db', 'ENTREZID')
 
 # Dataframe with gene-disease associations
 edo@result
 
-# 
+
 p1 = cnetplot(edox, 
+              showCategory = 5,
               categorySize="pvalue", 
-              foldChange = eMat_combined_ABMR_ENTREZID
+              foldChange = setNames(FC_ABMR_ENTREZID$logFC, rownames(FC_ABMR_ENTREZID)), 
+              cex_label_gene = 0.5
               )
 p1
-geneList
+
 ```
 
 
@@ -459,8 +490,8 @@ https://sydneybiox.github.io/CPOP/articles/CPOP.html
 
 ```{r}
 
-eMat_GSE48581_reduced = eMat_GSE48581[genes_selected,]
-eMat_GSE36059_reduced = eMat_GSE36059[genes_selected,]
+eMat_GSE48581_reduced = eMat_GSE48581[genes_selected_TCMR,]
+eMat_GSE36059_reduced = eMat_GSE36059[genes_selected_TCMR,]
 
 
 # Finds patients whom are either non-rejection or TCMR
@@ -474,7 +505,6 @@ indx = which(p_GSE36059$diagnosis == 'NR' | p_GSE36059$diagnosis == 'TCMR')
 
 x2 = t(eMat_GSE36059_reduced[, indx])
 y2 = factor(p_GSE36059$diagnosis[indx])
-
 
 cpop_result = cpop_model(
   x1 = x1, x2 = x2,
@@ -502,8 +532,6 @@ tcmr_nonrej_outcome = c(y1, y2)
 ```{r}
 plot_cpop(cpop_result = cpop_result, type = "ggraph")
 
-
-
 ```
 
 #### For Non-rejection & ABMR
@@ -511,7 +539,11 @@ plot_cpop(cpop_result = cpop_result, type = "ggraph")
 Same as before.
 
 ```{r}
-# Finds patients whom are either non-rejection or TCMR
+
+eMat_GSE48581_reduced = eMat_GSE48581[genes_selected_ABMR,]
+eMat_GSE36059_reduced = eMat_GSE36059[genes_selected_ABMR,]
+
+# Finds patients whom are either non-rejection or ABMR
 indx = which(p_GSE48581$diagnosis == 'NR' | p_GSE48581$diagnosis == 'ABMR')
 
 # Selects the correct patients from gene expression ratios & outcomes
@@ -533,7 +565,6 @@ cpop_result = cpop_model(
 ```
 
 ```{r}
-
 # This creates final joined dataframe based on selected gene combinations
 abmr_nonrej_features = bind_rows(data.frame(cpop_result$z1, check.names = FALSE), data.frame(cpop_result$z2, check.names = FALSE)) %>%
   select(cpop_result$feature)
