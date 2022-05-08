@@ -87,6 +87,23 @@ server <- function(input, output) {
     
     # reading file
     tbl <- read.csv(inFile$datapath)
+      
+    if(ncol(tbl)!=2){
+      shinyalert("Oops!", "Column is missing", type = "error")
+    }else{
+    for(i in tbl[1]){
+    if(!is.character(i))
+      shinyalert("Oops!", "The first column should be name of genes", type = "error")
+      break
+    }
+    for(i in tbl[2]){
+    if(!is.numeric(i) || !is.double(i))
+      shinyalert("Oops!", "The second column should be numeric expression set value", type = "error")
+      break
+    }
+    }
+      
+    
     return (tbl)
   })
   
