@@ -32,6 +32,9 @@ library(clusterProfiler)
 library(DOSE)
 library(org.Hs.eg.db)
 library(pathview)
+library(enrichplot)
+library(msigdbr)
+library
 #BiocManager::install("sva")
 ```
 
@@ -132,7 +135,7 @@ eMat_GSE36059 = eMat_GSE36059[idx,]
 # Print gene symbols
 gene_symbols = fData(GSE36059) %>%
   dplyr::select(ID, `Gene Symbol`) 
-kept_gene_symbols = gene_symbols[idx,] %>% pull(`Gene Symbol`)
+kept_gene_symbols = gene_symbols[idx,] %>% dplyr::pull(`Gene Symbol`)
 
 # Replace probe ids with gene names
 rownames(eMat_GSE36059) = lapply(strsplit(kept_gene_symbols, ' /// ', 1), `[`, 1)
@@ -191,7 +194,7 @@ eMat_GSE48581 = eMat_GSE48581[idx,]
 # Print gene symbols
 gene_symbols = fData(GSE48581) %>%
   dplyr::select(ID, `Gene Symbol`) 
-kept_gene_symbols = gene_symbols[idx,] %>% pull(`Gene Symbol`)
+kept_gene_symbols = gene_symbols[idx,] %>% dplyr::pull(`Gene Symbol`)
 
 # Replace probe ids with gene names
 rownames(eMat_GSE48581) = lapply(strsplit(kept_gene_symbols, ' /// ', 1), `[`, 1)
@@ -250,7 +253,7 @@ ORA_contrasts = function(fit, contrast_matrix, condition){
   efit = eBayes(constrast_fit, robust = TRUE)
   # Show how many genes were significant
   #summary(decideTests(efit, adjust.method = "BH", p.value = 0.05))
-  tT = topTable(efit, n = Inf) %>% filter(adj.P.Val<0.05)
+  tT = topTable(efit, n = 200, p.value = 0.05)
   # Rounding because significant figures
   DT::datatable(round(tT[1:100,], 2))
   return(tT)
@@ -281,15 +284,30 @@ genes_selected_TCMR = intersect(rownames(tT_TCMR_36059), rownames(tT_TCMR_48581)
 
 ```
 
-#### Testing Combined logFC (DON'T RUN)
+#### Testing Combined logFC by Averaging (DON'T RUN)
+
+What I have realised is that the treeplot and dotplot don't actually consider logFC so it doesn't matter if there are multiple datasets. The treeplots end up involving the same pathways however it is possible that the differing branching (similarity) could mean that different sets of pathways are activated in symphony in different outcomes.
 
 ```{r}
 # TESTING BELOW
 genes_selected = intersect(rownames(tT_ABMR_36059), rownames(tT_ABMR_48581))
-tT_ABMR_36059
+
+#FC_1 = tT_ABMR_36059 %>% 
+#  dplyr::select(logFC) %>% 
+#  filter(rownames(tT_ABMR_36059) %in% genes_selected)
+#
+#FC_2 = tT_ABMR_48581 %>% 
+#  dplyr::select(logFC) %>% 
+#  filter(rownames(tT_ABMR_36059) %in% genes_selected)
+
+#FC_ABMR = (FC_1+FC_2)/2
+
 FC_ABMR = tT_ABMR_36059 %>% 
   dplyr::select(logFC) %>% 
   filter(rownames(tT_ABMR_36059) %in% genes_selected)
+
+
+
 translated = bitr(rownames(FC_ABMR),
                   fromType = "SYMBOL",
                   toType = "ENTREZID",
@@ -302,7 +320,37 @@ FC_ABMR_ENTREZID
 ```
 
 
-#### KEGG Enrichment Analysis
+```{r}
+# TESTING BELOW
+genes_selected = intersect(rownames(tT_TCMR_36059), rownames(tT_TCMR_48581))
+
+#FC_1 = tT_TCMR_36059 %>% 
+#  dplyr::select(logFC) %>% 
+#  filter(rownames(tT_TCMR_36059) %in% genes_selected)
+#
+#FC_2 = tT_TCMR_48581 %>% 
+#  dplyr::select(logFC) %>% 
+#  filter(rownames(tT_TCMR_36059) %in% genes_selected)
+#
+#FC_TCMR = (FC_1+FC_2)/2
+
+FC_TCMR = tT_TCMR_48581 %>% 
+  dplyr::select(logFC) %>% 
+  filter(rownames(tT_TCMR_48581) %in% genes_selected)
+  
+translated = bitr(rownames(FC_TCMR),
+                  fromType = "SYMBOL",
+                  toType = "ENTREZID",
+                  OrgDb = "org.Hs.eg.db"
+                  )
+FC_TCMR_ENTREZID = FC_TCMR %>%
+  filter(rownames(FC_TCMR) %in% translated$SYMBOL)
+row.names(FC_TCMR_ENTREZID) = translated$ENTREZID
+FC_TCMR_ENTREZID
+```
+
+
+#### KEGG Enrichment Analysis (DON'T RUN)
 
 ```{r}
 #search_kegg_organism('hsa', by='kegg_code')
@@ -337,7 +385,8 @@ translated_TCMR = bitr(rownames(eMat_combined_TCMR),
 FC_ABMR_ENTREZID = FC_ABMR %>% 
   dplyr::select(logFC) %>% 
   filter(row.names(tT_ABMR) %in% translated_ABMR$SYMBOL)
-  
+
+row.names(tT_ABMR) %in% translated_ABMR$SYMBOL
 row.names(FC_ABMR_ENTREZID) = translated_ABMR$ENTREZID
 
 #UNSOLVED WHY THE FUCK IS THERE ONE EXTRA INDEX
@@ -387,68 +436,61 @@ hsa04110
 translated$ENTREZID[grepl("hsa05332", rownames(fc.kegg.sigmet.p.up), fixed=TRUE),]
 ```
 
-DisGeNET is a database of gene-disease associations.
-https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5210640/
+MSigDB is a database of molecular signatures database.
+https://www.gsea-msigdb.org/gsea/msigdb/
 
 
 ```{r}
-# UNRESOLVED, KEEPS USING THE WRONG UNIQUE() FUNCTION WHAT THE FUCK
 library(DOSE)
+library(msigdbr)
 
+geneList = setNames(FC_TCMR_ENTREZID$logFC, rownames(FC_TCMR_ENTREZID))
 geneList = setNames(FC_ABMR_ENTREZID$logFC, rownames(FC_ABMR_ENTREZID))
 
-# Using DisGeNET
-edo = enrichDGN(names(geneList))
-edox = setReadable(edo, 'org.Hs.eg.db', 'ENTREZID')
+# Retrieves human molecular signatures database v7.5.1
+# Category, H -> Hallmark Gene Sets, C7 -> Immunologic Signature Gene Sets
+msigdbr_df = msigdbr(species = "human", category = "H")
 
-# Dataframe with gene-disease associations
-edo@result
+# Prepare term to gene input
+msigdbr_t2g = msigdbr_df %>% dplyr::distinct(gs_name, entrez_gene) %>% as.data.frame()
 
+# Get over-representation results
+enrich = enricher(gene = names(geneList), TERM2GENE = msigdbr_t2g)
+enrich_readable = setReadable(enrich, 'org.Hs.eg.db', 'ENTREZID')
+enrich_readable@result$Description = str_replace_all(enrich_readable@result$Description, "_", " ")
 
-p1 = cnetplot(edox, 
+# Plot a cnetplot
+p1 = cnetplot(enrich_readable, 
               showCategory = 5,
               categorySize="pvalue", 
-              foldChange = setNames(FC_ABMR_ENTREZID$logFC, rownames(FC_ABMR_ENTREZID)), 
-              cex_label_gene = 0.5
+              foldChange = geneList, 
+              cex_label_gene = 0.5,
+              colorEdge = TRUE,
+              cex_label_category = 0.5
               )
 p1
 
 ```
 
-
-### Pairwise Expression Ratios
-
-Justification for pairwise expression ratios.
-https://bmcbioinformatics.biomedcentral.com/articles/10.1186/s12859-018-2261-8
-
-This code is technically not used at the moment since the package CPOP already calculates pairwise differences i.e. log fold ratios for us, however I think it is good to have here since we need to manually calculate log-fold ratios for new inferences.
-
-https://stackoverflow.com/questions/27489193/pairwise-row-matrix-multiplication-in-r
-
-The following code produces a list of vectors of combinations of two probes, then takes the difference in gene expression for each pair
-`lapply(split(indx, col(indx)), function(x) eMat_GSE48581_reduced[x[1],]-eMat_GSE48581_reduced[x[2],])`
-The lapply spits out a separate row result for each combination of probes. Do.call with row bind, binds them all together into a matrix
-`do.call(rbind, lapply(split(indx, col(indx)), function(x) eMat_GSE48581_reduced[x[1],]-eMat_GSE48581_reduced[x[2],]))`
-
 ```{r}
-eMat_GSE48581_reduced = eMat_GSE48581[genes_selected,]
-eMat_GSE36059_reduced = eMat_GSE36059[genes_selected,]
+library(stringr)
+label_func = function(string){
+  return(str_to_sentence(str_replace_all(string, "_", " ")))
+}
+dotplot(enrich, label_format = label_func)
 
-
-# This takes combinations of the different genes and finds the difference in their expression
-indx = combn(rownames(eMat_GSE48581_reduced),2)
-combn_names = paste(t(indx)[,1], t(indx)[,2], sep='--')
-eMat_GSE48581_ratios = cbind(combn_names, as.data.frame(do.call(rbind, lapply(split(indx, col(indx)), function(x) eMat_GSE48581_reduced[x[1],]-eMat_GSE48581_reduced[x[2],]))))
-eMat_GSE48581_ratios = eMat_GSE48581_ratios %>% remove_rownames %>% column_to_rownames(var = "combn_names")
-
-indx = combn(rownames(eMat_GSE36059_reduced),2)
-eMat_GSE36059_ratios = cbind(combn_names, as.data.frame(do.call(rbind, lapply(split(indx, col(indx)), function(x) eMat_GSE36059_reduced[x[1],]-eMat_GSE36059_reduced[x[2],]))))
-eMat_GSE36059_ratios = eMat_GSE36059_ratios %>% remove_rownames %>% column_to_rownames(var = "combn_names")
-
-eMat_GSE48581_ratios
-eMat_GSE36059_ratios
 
 ```
+Following article could help explain why we see TNF-A -> NFKB response
+
+https://www.frontiersin.org/articles/10.3389/fimmu.2019.00815/full
+
+```{r}
+similiarity_enrich = pairwise_termsim(enrich_readable)
+p1 = treeplot(similiarity_enrich)
+p1
+```
+
 
 ### Selecting Genes Stable between Datasets
 
@@ -816,3 +858,43 @@ genes_selected = intersect(GSE48581_top50, GSE36059_top50)
 
 ```
 
+
+
+DisGeNET is a database of gene-disease associations.
+https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5210640/
+
+
+
+### Pairwise Expression Ratios
+
+Justification for pairwise expression ratios.
+https://bmcbioinformatics.biomedcentral.com/articles/10.1186/s12859-018-2261-8
+
+This code is technically not used at the moment since the package CPOP already calculates pairwise differences i.e. log fold ratios for us, however I think it is good to have here since we need to manually calculate log-fold ratios for new inferences.
+
+https://stackoverflow.com/questions/27489193/pairwise-row-matrix-multiplication-in-r
+
+The following code produces a list of vectors of combinations of two probes, then takes the difference in gene expression for each pair
+`lapply(split(indx, col(indx)), function(x) eMat_GSE48581_reduced[x[1],]-eMat_GSE48581_reduced[x[2],])`
+The lapply spits out a separate row result for each combination of probes. Do.call with row bind, binds them all together into a matrix
+`do.call(rbind, lapply(split(indx, col(indx)), function(x) eMat_GSE48581_reduced[x[1],]-eMat_GSE48581_reduced[x[2],]))`
+
+```{r}
+eMat_GSE48581_reduced = eMat_GSE48581[genes_selected,]
+eMat_GSE36059_reduced = eMat_GSE36059[genes_selected,]
+
+
+# This takes combinations of the different genes and finds the difference in their expression
+indx = combn(rownames(eMat_GSE48581_reduced),2)
+combn_names = paste(t(indx)[,1], t(indx)[,2], sep='--')
+eMat_GSE48581_ratios = cbind(combn_names, as.data.frame(do.call(rbind, lapply(split(indx, col(indx)), function(x) eMat_GSE48581_reduced[x[1],]-eMat_GSE48581_reduced[x[2],]))))
+eMat_GSE48581_ratios = eMat_GSE48581_ratios %>% remove_rownames %>% column_to_rownames(var = "combn_names")
+
+indx = combn(rownames(eMat_GSE36059_reduced),2)
+eMat_GSE36059_ratios = cbind(combn_names, as.data.frame(do.call(rbind, lapply(split(indx, col(indx)), function(x) eMat_GSE36059_reduced[x[1],]-eMat_GSE36059_reduced[x[2],]))))
+eMat_GSE36059_ratios = eMat_GSE36059_ratios %>% remove_rownames %>% column_to_rownames(var = "combn_names")
+
+eMat_GSE48581_ratios
+eMat_GSE36059_ratios
+
+```
