@@ -97,6 +97,9 @@ server <- function(input, output) {
       return(NULL)
     }else{
     for(i in tbl[1]){
+    if(is.na(i))
+      shinyalert("Oops!", "The name of a gene is missing", type = "error")
+      return(NULL)
     if(!is.character(i))
       shinyalert("Oops!", "The first column should be name of genes", type = "error")
       return(NULL)
@@ -107,6 +110,20 @@ server <- function(input, output) {
       return(NULL)
     }
     }
+    count=0
+    for(i in tbl[2]){
+      if(is.na(i))
+        count=count+1
+    }
+    
+    if(count<10)
+    {
+      
+    }
+      
+    
+    return (tbl)
+  })
       
     
     return (tbl)
