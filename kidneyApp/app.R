@@ -124,10 +124,6 @@ server <- function(input, output) {
     
     return (tbl)
   })
-      
-    
-    return (tbl)
-  })
   
   # rendering table in File Upload page
   output$tbl = DT::renderDT({
