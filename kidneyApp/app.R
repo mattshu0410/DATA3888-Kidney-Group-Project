@@ -3,6 +3,7 @@ library(shinythemes)
 library(shinyjs)
 library(tidyverse)
 library(DT)
+library(shinyalert)
 
 # Define UI for application that draws a histogram
 ui <- navbarPage(theme = shinytheme("flatly"), title = "Kidney C1", fluid=TRUE, id = "tabs",
@@ -72,7 +73,10 @@ server <- function(input, output) {
   
   # if csv added, show action button
   observeEvent(input$target_upload, {
-    shinyjs::show("showTab")
+    current_data = mydata()
+    if (!is.null(current_data)) {
+      shinyjs::show("showTab")
+    }
   })
   
   # reading csv file and returning data frame
@@ -90,16 +94,17 @@ server <- function(input, output) {
       
     if(ncol(tbl)!=2){
       shinyalert("Oops!", "Column is missing", type = "error")
+      return(NULL)
     }else{
     for(i in tbl[1]){
     if(!is.character(i))
       shinyalert("Oops!", "The first column should be name of genes", type = "error")
-      break
+      return(NULL)
     }
     for(i in tbl[2]){
     if(!is.numeric(i) || !is.double(i))
       shinyalert("Oops!", "The second column should be numeric expression set value", type = "error")
-      break
+      return(NULL)
     }
     }
       
