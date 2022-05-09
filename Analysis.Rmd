@@ -106,7 +106,7 @@ length(rownames(eMat_GSE36059))
 
 # Load relevant matrices
 eMat_GSE36059 = exprs(GSE36059)
-p_GSE36059 = rename(pData(GSE36059), diagnosis = `diagnosis:ch1`)
+p_GSE36059 = dplyr::rename(pData(GSE36059), diagnosis = `diagnosis:ch1`)
 p_GSE36059$diagnosis = gsub("non-rejecting", "NR", p_GSE36059$diagnosis)
 
 # Rows & patient id with control diagnosis of nephrectomy
@@ -131,7 +131,7 @@ eMat_GSE36059 = eMat_GSE36059[idx,]
 
 # Print gene symbols
 gene_symbols = fData(GSE36059) %>%
-  select(ID, `Gene Symbol`) 
+  dplyr::select(ID, `Gene Symbol`) 
 kept_gene_symbols = gene_symbols[idx,] %>% pull(`Gene Symbol`)
 
 # Replace probe ids with gene names
@@ -157,7 +157,7 @@ GSE48581 = GEO_GSE48581$GSE48581_series_matrix.txt.gz
 
 # Load relevant matrices
 eMat_GSE48581 = exprs(GSE48581)
-p_GSE48581 = rename(pData(GSE48581), diagnosis = `diagnosis (tcmr, abmr, mixed, non-rejecting, nephrectomy):ch1` )
+p_GSE48581 = dplyr::rename(pData(GSE48581), diagnosis = `diagnosis (tcmr, abmr, mixed, non-rejecting, nephrectomy):ch1` )
 
 # Rename non-rejecting level
 p_GSE48581$diagnosis = gsub("non-rejecting", "NR", p_GSE48581$diagnosis)
@@ -190,7 +190,7 @@ eMat_GSE48581 = eMat_GSE48581[idx,]
 
 # Print gene symbols
 gene_symbols = fData(GSE48581) %>%
-  select(ID, `Gene Symbol`) 
+  dplyr::select(ID, `Gene Symbol`) 
 kept_gene_symbols = gene_symbols[idx,] %>% pull(`Gene Symbol`)
 
 # Replace probe ids with gene names
@@ -223,16 +223,6 @@ Original Batch Correction: https://academic.oup.com/biostatistics/article/8/1/11
 In action: https://biodatamining.biomedcentral.com/articles/10.1186/s13040-020-00217-8
 
 
-```{r}
-
-GSE36059
-GSE48581
-GSE21374
-
-pData(GSE21374)
-p_GSE36059
-```
-
 ## Relative Gene Expression
 
 https://www.researchgate.net/publication/289524168_Pathway_Analysis_State_of_the_Art
@@ -262,7 +252,7 @@ ORA_contrasts = function(fit, contrast_matrix, condition){
   #summary(decideTests(efit, adjust.method = "BH", p.value = 0.05))
   tT = topTable(efit, n = Inf) %>% filter(adj.P.Val<0.05)
   # Rounding because significant figures
-  DT::datatable(round(tT_ABMR[1:100,], 2))
+  DT::datatable(round(tT[1:100,], 2))
   return(tT)
 }
 
@@ -282,7 +272,18 @@ get_ORA_genes = function(patient_data, expression_matrix) {
 
 tT_ABMR_48581 = get_ORA_genes(p_GSE48581, eMat_GSE48581)$tT_ABMR
 tT_ABMR_36059 = get_ORA_genes(p_GSE36059, eMat_GSE36059)$tT_ABMR
+genes_selected_ABMR = intersect(rownames(tT_ABMR_36059), rownames(tT_ABMR_48581))
 
+
+tT_TCMR_48581 = get_ORA_genes(p_GSE48581, eMat_GSE48581)$tT_TCMR
+tT_TCMR_36059 = get_ORA_genes(p_GSE36059, eMat_GSE36059)$tT_TCMR
+genes_selected_TCMR = intersect(rownames(tT_TCMR_36059), rownames(tT_TCMR_48581))
+
+```
+
+#### Testing Combined logFC (DON'T RUN)
+
+```{r}
 # TESTING BELOW
 genes_selected = intersect(rownames(tT_ABMR_36059), rownames(tT_ABMR_48581))
 tT_ABMR_36059
@@ -301,41 +302,10 @@ FC_ABMR_ENTREZID
 ```
 
 
-#### Highest Variability
-
-This is an alternative method to select genes.
-
-```{r}
-# High Variability
-
-large_var_GSE48581 = apply(eMat_GSE48581, 1, var)
-large_var_GSE36059 = apply(eMat_GSE36059, 1, var)
-
-# Top 50 genes by variance
-GSE48581_top50 = names(tail(sort(large_var_GSE48581), 50))
-GSE36059_top50 = names(tail(sort(large_var_GSE36059), 50))
-setdiff(GSE48581_top50, GSE36059_top50)
-genes_selected = intersect(GSE48581_top50, GSE36059_top50)
-
-
-#ind_GSE46474 = tail(order(large_var_GSE46474), 50) 
-
-```
-
 #### KEGG Enrichment Analysis
 
 ```{r}
 #search_kegg_organism('hsa', by='kegg_code')
-data(geneList, package = 'DOSE')
-data.frame(geneList)
-
-# Biological ID Translator
-translated = bitr(rownames(eMat_GSE48581_reduced),
-                  fromType = "SYMBOL",
-                  toType = "ENTREZID",
-                  OrgDb = "org.Hs.eg.db"
-                  )
-
 
 # Combined datasets into matrix
 eMat_combined = cbind(eMat_GSE48581, eMat_GSE36059)
@@ -343,9 +313,11 @@ eMat_combined = cbind(eMat_GSE48581, eMat_GSE36059)
 # Get only genes relevant to ABMR and TCMR respectively
 eMat_combined_ABMR = eMat_combined[genes_selected_ABMR,]
 eMat_combined_TCMR = eMat_combined[genes_selected_TCMR,]
+# Get 
 FC_TCMR = tT_TCMR[genes_selected_TCMR,]
 FC_ABMR = tT_ABMR[genes_selected_ABMR,]
 
+# Biological ID Translator
 # Get ABMR genes
 translated_ABMR = bitr(rownames(eMat_combined_ABMR),
      fromType = "SYMBOL",
@@ -820,6 +792,27 @@ pData(GSE34748)$title
 ```{r}
 
 GSE51675 = getGEO("GSE51675")
+
+```
+
+#### Highest Variability
+
+This is an alternative method to select genes.
+
+```{r}
+# High Variability
+
+large_var_GSE48581 = apply(eMat_GSE48581, 1, var)
+large_var_GSE36059 = apply(eMat_GSE36059, 1, var)
+
+# Top 50 genes by variance
+GSE48581_top50 = names(tail(sort(large_var_GSE48581), 50))
+GSE36059_top50 = names(tail(sort(large_var_GSE36059), 50))
+setdiff(GSE48581_top50, GSE36059_top50)
+genes_selected = intersect(GSE48581_top50, GSE36059_top50)
+
+
+#ind_GSE46474 = tail(order(large_var_GSE46474), 50) 
 
 ```
 
