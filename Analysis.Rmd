@@ -11,7 +11,8 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 ```{r, results='hide', warning=FALSE, message=FALSE}
-library(tidyverse)
+library(dplyr)
+library(tidyr)
 library(devtools)
 library(ggplot2)
 library(stringr)
@@ -34,7 +35,8 @@ library(org.Hs.eg.db)
 library(pathview)
 library(enrichplot)
 library(msigdbr)
-library
+library(stringr)
+
 #BiocManager::install("sva")
 ```
 
@@ -99,13 +101,13 @@ GEO_GSE36059 = getGEO("GSE36059")
 GSE36059 = GEO_GSE36059$GSE36059_series_matrix.txt.gz
 
 # Example of functions that return patient data, feature data, expression matrix
-head(pData(GSE36059)[,1:5])
-head(fData(GSE36059)[,1:5])
-head(exprs(GSE36059)[,1:5])
+#head(pData(GSE36059)[,1:5])
+#head(fData(GSE36059)[,1:5])
+#head(exprs(GSE36059)[,1:5])
 
 # How to return gene names
-rownames(eMat_GSE36059)
-length(rownames(eMat_GSE36059))
+#rownames(eMat_GSE36059)
+#length(rownames(eMat_GSE36059))
 
 # Load relevant matrices
 eMat_GSE36059 = exprs(GSE36059)
@@ -121,7 +123,7 @@ p_GSE36059 = p_GSE36059[!(row.names(p_GSE36059) %in% remove_patient_id),]
 eMat_GSE36059 = eMat_GSE36059[, !(colnames(eMat_GSE36059) %in% remove_patient_id)]
 
 # Multiple probes test same genes
-sum(duplicated(fData(GSE36059)$`Gene Symbol`))
+#sum(duplicated(fData(GSE36059)$`Gene Symbol`))
 
 # List of the main genes
 all_gene_symbols = unlist(lapply(strsplit(fData(GSE36059)$`Gene Symbol`, ' /// ', 1), `[`, 1))
@@ -175,12 +177,9 @@ p_GSE48581 = p_GSE48581[!(row.names(p_GSE48581) %in% remove_patient_id),]
 eMat_GSE48581 = eMat_GSE48581[, !(colnames(eMat_GSE48581) %in% remove_patient_id)]
 
 
-p_GSE48581$diagnosis
-
-
 
 # Multiple probes test same genes
-sum(duplicated(fData(GSE48581)$`Gene Symbol`))
+#sum(duplicated(fData(GSE48581)$`Gene Symbol`))
 
 # List of the main genes
 all_gene_symbols = unlist(lapply(strsplit(fData(GSE48581)$`Gene Symbol`, ' /// ', 1), `[`, 1))
@@ -273,223 +272,233 @@ get_ORA_genes = function(patient_data, expression_matrix) {
 }
 
 
+# Finds only the names of the ABMR vs Healthy genes significant to both datasets
 tT_ABMR_48581 = get_ORA_genes(p_GSE48581, eMat_GSE48581)$tT_ABMR
 tT_ABMR_36059 = get_ORA_genes(p_GSE36059, eMat_GSE36059)$tT_ABMR
 genes_selected_ABMR = intersect(rownames(tT_ABMR_36059), rownames(tT_ABMR_48581))
 
-
+# Finds only the names of the TCMR vs Healthy genes significant to both datasets
 tT_TCMR_48581 = get_ORA_genes(p_GSE48581, eMat_GSE48581)$tT_TCMR
 tT_TCMR_36059 = get_ORA_genes(p_GSE36059, eMat_GSE36059)$tT_TCMR
 genes_selected_TCMR = intersect(rownames(tT_TCMR_36059), rownames(tT_TCMR_48581))
 
 ```
 
-#### Testing Combined logFC by Averaging (DON'T RUN)
+#### Average or Single Dataset Fold Change
+
+We can either plot the following exploratory plots based on the average log fold change between the two datasets or generate single plots for each dataset. The plotting functions take in the same arguments for either choice. The plots which use average log fold change are the network plot and the KEGG pathway plot.
 
 What I have realised is that the treeplot and dotplot don't actually consider logFC so it doesn't matter if there are multiple datasets. The treeplots end up involving the same pathways however it is possible that the differing branching (similarity) could mean that different sets of pathways are activated in symphony in different outcomes.
 
 ```{r}
-# TESTING BELOW
-genes_selected = intersect(rownames(tT_ABMR_36059), rownames(tT_ABMR_48581))
-
-#FC_1 = tT_ABMR_36059 %>% 
-#  dplyr::select(logFC) %>% 
-#  filter(rownames(tT_ABMR_36059) %in% genes_selected)
-#
-#FC_2 = tT_ABMR_48581 %>% 
-#  dplyr::select(logFC) %>% 
-#  filter(rownames(tT_ABMR_36059) %in% genes_selected)
-
-#FC_ABMR = (FC_1+FC_2)/2
-
-FC_ABMR = tT_ABMR_36059 %>% 
-  dplyr::select(logFC) %>% 
-  filter(rownames(tT_ABMR_36059) %in% genes_selected)
 
 
-
-translated = bitr(rownames(FC_ABMR),
+# Input two toptables to be combined & significant genes
+# Output single average log fold ratio table with ENTREZID
+get_average_FC = function(topTable1, topTable2, genes_selected) {
+  
+  FC_1 = topTable1 %>% 
+    dplyr::select(logFC) %>% 
+    filter(rownames(topTable1) %in% genes_selected)
+  
+  FC_2 = topTable2 %>% 
+    dplyr::select(logFC) %>% 
+    filter(rownames(topTable2) %in% genes_selected)
+  
+  FC_avg = (FC_1+FC_2)/2
+  
+  translated = bitr(rownames(FC_avg),
                   fromType = "SYMBOL",
                   toType = "ENTREZID",
                   OrgDb = "org.Hs.eg.db"
                   )
-FC_ABMR_ENTREZID = FC_ABMR %>%
-  filter(rownames(FC_ABMR) %in% translated$SYMBOL)
-row.names(FC_ABMR_ENTREZID) = translated$ENTREZID
-FC_ABMR_ENTREZID
-```
-
-
-```{r}
-# TESTING BELOW
-genes_selected = intersect(rownames(tT_TCMR_36059), rownames(tT_TCMR_48581))
-
-#FC_1 = tT_TCMR_36059 %>% 
-#  dplyr::select(logFC) %>% 
-#  filter(rownames(tT_TCMR_36059) %in% genes_selected)
-#
-#FC_2 = tT_TCMR_48581 %>% 
-#  dplyr::select(logFC) %>% 
-#  filter(rownames(tT_TCMR_36059) %in% genes_selected)
-#
-#FC_TCMR = (FC_1+FC_2)/2
-
-FC_TCMR = tT_TCMR_48581 %>% 
-  dplyr::select(logFC) %>% 
-  filter(rownames(tT_TCMR_48581) %in% genes_selected)
+  FC_ENTREZID = FC_avg %>%
+    filter(rownames(FC_avg) %in% translated$SYMBOL)
   
-translated = bitr(rownames(FC_TCMR),
+  row.names(FC_ENTREZID) = translated$ENTREZID
+  
+  FC_ENTREZID = setNames(FC_ENTREZID$logFC, rownames(FC_ENTREZID))
+  return(FC_ENTREZID)
+}
+
+# Input single toptable & significant genes
+# Output single log fold ratio table with ENTREZID
+get_single_FC = function(topTable, genes_selected) {
+  
+  FC = topTable %>% 
+    dplyr::select(logFC) %>% 
+    filter(rownames(topTable) %in% genes_selected)
+  
+  translated = bitr(rownames(FC),
                   fromType = "SYMBOL",
                   toType = "ENTREZID",
                   OrgDb = "org.Hs.eg.db"
                   )
-FC_TCMR_ENTREZID = FC_TCMR %>%
-  filter(rownames(FC_TCMR) %in% translated$SYMBOL)
-row.names(FC_TCMR_ENTREZID) = translated$ENTREZID
-FC_TCMR_ENTREZID
-```
-
-
-#### KEGG Enrichment Analysis (DON'T RUN)
-
-```{r}
-#search_kegg_organism('hsa', by='kegg_code')
-
-# Combined datasets into matrix
-eMat_combined = cbind(eMat_GSE48581, eMat_GSE36059)
-
-# Get only genes relevant to ABMR and TCMR respectively
-eMat_combined_ABMR = eMat_combined[genes_selected_ABMR,]
-eMat_combined_TCMR = eMat_combined[genes_selected_TCMR,]
-# Get 
-FC_TCMR = tT_TCMR[genes_selected_TCMR,]
-FC_ABMR = tT_ABMR[genes_selected_ABMR,]
-
-# Biological ID Translator
-# Get ABMR genes
-translated_ABMR = bitr(rownames(eMat_combined_ABMR),
-     fromType = "SYMBOL",
-     toType = "ENTREZID",
-     OrgDb = "org.Hs.eg.db"
-     )
-
-# Get TCMR genes
-translated_TCMR = bitr(rownames(eMat_combined_TCMR),
-     fromType = "SYMBOL",
-     toType = "ENTREZID",
-     OrgDb = "org.Hs.eg.db"
-     )
-
-# Get gene list with ENTREZID
-
-FC_ABMR_ENTREZID = FC_ABMR %>% 
-  dplyr::select(logFC) %>% 
-  filter(row.names(tT_ABMR) %in% translated_ABMR$SYMBOL)
-
-row.names(tT_ABMR) %in% translated_ABMR$SYMBOL
-row.names(FC_ABMR_ENTREZID) = translated_ABMR$ENTREZID
-
-#UNSOLVED WHY THE FUCK IS THERE ONE EXTRA INDEX
-FC_TCMR_ENTREZID = FC_TCMR %>% 
-  dplyr::select(logFC) %>% 
-  filter(row.names(tT_TCMR) %in% translated_TCMR$SYMBOL)
   
-row.names(FC_TCMR_ENTREZID) = translated_TCMR$ENTREZID
+  FC_ENTREZID = FC %>%
+    filter(rownames(FC) %in% translated$SYMBOL)
+  
+  row.names(FC_ENTREZID) = translated$ENTREZID
+  FC_ENTREZID = setNames(FC_ENTREZID$logFC, rownames(FC_ENTREZID))
+  return(FC_ENTREZID)
+}
 
-# Get combined expression matrix with ENTREZID
-eMat_combined_ABMR_ENTREZID = eMat_combined_ABMR[which(rownames(eMat_combined_ABMR) %in% translated_ABMR$SYMBOL), ]
-rownames(eMat_combined_ABMR_ENTREZID) = translated_ABMR$ENTREZID
+# Get average log fold changes of significant genes between datasets
+FC_ABMR_ENTREZID = get_average_FC(tT_ABMR_48581, tT_ABMR_36059, genes_selected_ABMR)
+FC_TCMR_ENTREZID = get_average_FC(tT_TCMR_48581, tT_TCMR_36059, genes_selected_TCMR)
 
-#UNSOLVED WHY THE FUCK IS THERE ONE EXTRA INDEX
-eMat_combined_TCMR_ENTREZID = eMat_combined_TCMR[which(rownames(eMat_combined_TCMR) %in% translated_TCMR$SYMBOL), ]
-rownames(eMat_combined_TCMR_ENTREZID) = translated_TCMR$ENTREZID
-
-
-
-
-
-
-bitr(rownames(eMat_combined_ABMR_ENTREZID),
-     fromType = "SYMBOL",
-     toType = "ENTREZID",
-     OrgDb = "org.Hs.eg.db"
-     )
-
-sum(duplicated(translated_TCMR$ENTREZID))
-kk = enrichKEGG(gene = translated$ENTREZID,
-                organism = 'hsa',
-                pvalueCutoff = 0.05)
-
-# Shows upregulated pathways
-head(kk)
+# Alternatively, get log fold changes of a single dataset
+FC_ABMR_ENTREZID = get_single_FC(tT_ABMR_48581, genes_selected_ABMR)
 
 
-browseKEGG(kk, 'hsa05332')
-
-hsa04110 <- pathview(gene.data  = geneList,
-                     pathway.id = "hsa05332",
-                     species    = "hsa",
-                     limit      = list(gene=max(abs(geneList)), cpd=1))
-
-hsa04110
-
-translated$ENTREZID[grepl("hsa05332", rownames(fc.kegg.sigmet.p.up), fixed=TRUE),]
 ```
+
+### Visualisations
+
+#### Molecular Signatures Functional Enrichment Network Plot
 
 MSigDB is a database of molecular signatures database.
 https://www.gsea-msigdb.org/gsea/msigdb/
 
+The following plot requires the log fold changes of each gene.
 
 ```{r}
-library(DOSE)
-library(msigdbr)
 
-geneList = setNames(FC_TCMR_ENTREZID$logFC, rownames(FC_TCMR_ENTREZID))
-geneList = setNames(FC_ABMR_ENTREZID$logFC, rownames(FC_ABMR_ENTREZID))
 
-# Retrieves human molecular signatures database v7.5.1
-# Category, H -> Hallmark Gene Sets, C7 -> Immunologic Signature Gene Sets
-msigdbr_df = msigdbr(species = "human", category = "H")
-
-# Prepare term to gene input
-msigdbr_t2g = msigdbr_df %>% dplyr::distinct(gs_name, entrez_gene) %>% as.data.frame()
-
-# Get over-representation results
-enrich = enricher(gene = names(geneList), TERM2GENE = msigdbr_t2g)
-enrich_readable = setReadable(enrich, 'org.Hs.eg.db', 'ENTREZID')
-enrich_readable@result$Description = str_replace_all(enrich_readable@result$Description, "_", " ")
-
-# Plot a cnetplot
-p1 = cnetplot(enrich_readable, 
-              showCategory = 5,
-              categorySize="pvalue", 
-              foldChange = geneList, 
-              cex_label_gene = 0.5,
-              colorEdge = TRUE,
-              cex_label_category = 0.5
-              )
-p1
-
-```
-
-```{r}
-library(stringr)
-label_func = function(string){
-  return(str_to_sentence(str_replace_all(string, "_", " ")))
+# Input vector with names as ENTREZID & log-fold change values, return enrich result
+get_enrich = function(geneList) {
+  
+  # Retrieves human molecular signatures database v7.5.1
+  # Category, H -> Hallmark Gene Sets, C7 -> Immunologic Signature Gene Sets
+  msigdbr_df = msigdbr(species = "human", category = "H")
+  
+  # Prepare term to gene input
+  msigdbr_t2g = msigdbr_df %>% dplyr::distinct(gs_name, entrez_gene) %>% as.data.frame()
+  
+  # Get over-representation results
+  enrich = enricher(gene = names(geneList), TERM2GENE = msigdbr_t2g)
+  return(enrich)
+  
 }
-dotplot(enrich, label_format = label_func)
+
+# Input vector with names as ENTREZID & log-fold change values, return network plot
+make_network_plot = function(geneList){
+  
+  enrich = get_enrich(geneList)
+  # ENTREZID to gene symbol 
+  enrich_readable = setReadable(enrich, 'org.Hs.eg.db', 'ENTREZID')
+  enrich_readable@result$Description = enrich_readable@result$Description %>%
+    str_replace_all("_", " ") %>%
+    str_to_sentence()
+  
+  # Plot a cnetplot
+  p1 = cnetplot(enrich_readable, 
+                showCategory = 6,
+                categorySize="pvalue", 
+                foldChange = geneList, 
+                cex_label_gene = 0.3,
+                colorEdge = TRUE,
+                cex_label_category = 0.5
+                )
+  return(p1)
+  
+}
 
 
 ```
+
+
+
+#### Dot Plot
+
+Dot plot does not use the log fold change values.
+
+```{r}
+
+# Makes strings returned by msigdb look prettier
+label_func = function(string){
+  
+  return(str_to_sentence(str_replace_all(string, "_", " ")))
+  
+}
+
+# Input vector with names as ENTREZID & log-fold change values, return dotplot
+make_dotplot = function(geneList){
+  
+  enrich = get_enrich(geneList)
+  dotplot(enrich, label_format = label_func)
+}
+
+
+
+```
+
+#### Tree plot
+
+Tree plot does not use the log fold change values.
+
 Following article could help explain why we see TNF-A -> NFKB response
 
 https://www.frontiersin.org/articles/10.3389/fimmu.2019.00815/full
 
 ```{r}
-similiarity_enrich = pairwise_termsim(enrich_readable)
-p1 = treeplot(similiarity_enrich)
-p1
+
+# Input vector with names as ENTREZID & log-fold change values, return tree plot
+make_treeplot = function(geneList){
+  
+  enrich = get_enrich(geneList)
+  # ENTREZID to gene symbol 
+  enrich_readable = setReadable(enrich, 'org.Hs.eg.db', 'ENTREZID')
+  # Calculates pairwsie similarity using Jaccard's similarity index
+  similiarity_enrich = pairwise_termsim(enrich_readable)
+  # Tree plot where default agglomeration method uses ward.D
+  p1 = treeplot(similiarity_enrich)
+  return(p1)
+  
+}
+
 ```
+
+#### KEGG Enrichment Analysis
+
+Kyoto Encyclopedia of Genes and Genomes is a database which helps us understand high-level functional pathways.
+
+```{r}
+#search_kegg_organism('hsa', by='kegg_code')
+
+# Searches for relevant pathways based on selected genes
+kk = enrichKEGG(gene = translated$ENTREZID,
+                organism = 'hsa',
+                pvalueCutoff = 0.05)
+
+# Shows upregulated pathways, pay attention to ID column
+head(kk)
+
+# Displays upregulated pathway of ID = 'hsa05332' in browser
+browseKEGG(kk, 'hsa05332')
+
+# Saves an image of the pathway in root as {ID}.pathview.png e.g. hsa05332.pathview.png
+hsa05332 = pathview(gene.data  = geneList,
+                     pathway.id = "hsa05332",
+                     species    = "hsa",
+                     limit      = list(gene=max(abs(geneList)), cpd=1))
+
+```
+
+#### Using the Plot Functions
+
+```{r}
+
+
+make_network_plot(FC_ABMR_ENTREZID)
+make_network_plot(FC_TCMR_ENTREZID)
+make_dotplot(FC_ABMR_ENTREZID)
+make_dotplot(FC_TCMR_ENTREZID)
+make_treeplot(FC_ABMR_ENTREZID)
+make_treeplot(FC_TCMR_ENTREZID)
+
+```
+
 
 
 ### Selecting Genes Stable between Datasets
@@ -500,94 +509,70 @@ https://www.biorxiv.org/content/10.1101/2020.12.09.415927v1.full
 
 https://sydneybiox.github.io/CPOP/articles/CPOP.html
 
-#### For Non-rejection & TCMR
 
 ```{r}
 
-eMat_GSE48581_reduced = eMat_GSE48581[genes_selected_TCMR,]
-eMat_GSE36059_reduced = eMat_GSE36059[genes_selected_TCMR,]
-
-
-# Finds patients whom are either non-rejection or TCMR
-indx = which(p_GSE48581$diagnosis == 'NR' | p_GSE48581$diagnosis == 'TCMR')
-
-# Selects the correct patients from gene expression ratios & outcomes
-x1 = t(eMat_GSE48581_reduced[, indx])
-y1 = factor(p_GSE48581$diagnosis[indx])
-
-indx = which(p_GSE36059$diagnosis == 'NR' | p_GSE36059$diagnosis == 'TCMR')
-
-x2 = t(eMat_GSE36059_reduced[, indx])
-y2 = factor(p_GSE36059$diagnosis[indx])
-
-cpop_result = cpop_model(
+# Input two expression matrices, phenotype dataframes, significant genes, positive class (ABMR, TCMR)
+# Output cpop result
+get_cpop_result = function(exp_matrix1, exp_matrix2, pdata1, pdata2, genes_selected, positive_class){
+  
+  # Selects only significant genes from each expression matrix
+  exp_matrix1_reduced = exp_matrix1[genes_selected,]
+  exp_matrix2_reduced = exp_matrix2[genes_selected,]
+  
+  # Finds patients whom are either non-rejection or ABMR
+  indx = which(pdata1$diagnosis == 'NR' | pdata1$diagnosis == positive_class)
+  
+  # Selects the correct patients from gene expression ratios & outcomes
+  x1 = t(exp_matrix1_reduced[, indx])
+  y1 = factor(pdata1$diagnosis[indx])
+  
+  indx = which(pdata2$diagnosis == 'NR' | pdata2$diagnosis == positive_class)
+  
+  x2 = t(exp_matrix2_reduced[, indx])
+  y2 = factor(pdata2$diagnosis[indx])
+  
+  # Perform CPOP
+  cpop_result = cpop_model(
   x1 = x1, x2 = x2,
   y1 = y1, y2 = y2,
   family = "binomial",
-  alpha = 1
-)
+  alpha = 1,
+  n_features = 10
+  )
+  
+  # Find combined feature matrix
+  features = bind_rows(data.frame(cpop_result$z1, check.names = FALSE), data.frame(cpop_result$z2, check.names = FALSE)) %>%
+    dplyr::select(cpop_result$feature)
+  
+  return(list("cpop_result" = cpop_result, "features" =  features, "outcome" = c(y1, y2)))
+
+}
+
+
 ```
 
+#### CPOP on ABMR
 
 ```{r}
-#plot_cpop(cpop_result = cpop_result, type = "text")
+abmr_cpop_results = get_cpop_result(eMat_GSE48581, eMat_GSE36059, p_GSE48581, p_GSE36059, genes_selected_ABMR, "ABMR")
+ cpop_result = abmr_cpop_results$cpop_result
+abmr_nonrej_features = abmr_cpop_results$features
+abmr_nonrej_outcome = abmr_cpop_results$outcome
 
-#names(cpop_result)
-
-# This creates final joined dataframe based on selected gene combinations
-tcmr_nonrej_features = bind_rows(data.frame(cpop_result$z1, check.names = FALSE), data.frame(cpop_result$z2, check.names = FALSE)) %>%
-  select(cpop_result$feature)
-tcmr_nonrej_outcome = c(y1, y2)
-
-```
-
-#### Network Plot - TCMR
-
-```{r}
 plot_cpop(cpop_result = cpop_result, type = "ggraph")
-
 ```
 
-#### For Non-rejection & ABMR
-
-Same as before.
+#### CPOP on TCMR
 
 ```{r}
+tcmr_cpop_results = get_cpop_result(eMat_GSE48581, eMat_GSE36059, p_GSE48581, p_GSE36059, genes_selected_TCMR, "TCMR")
+ cpop_result = tcmr_cpop_results$cpop_result
+tcmr_nonrej_features = tcmr_cpop_results$features
+tcmr_nonrej_outcome = tcmr_cpop_results$outcome
 
-eMat_GSE48581_reduced = eMat_GSE48581[genes_selected_ABMR,]
-eMat_GSE36059_reduced = eMat_GSE36059[genes_selected_ABMR,]
-
-# Finds patients whom are either non-rejection or ABMR
-indx = which(p_GSE48581$diagnosis == 'NR' | p_GSE48581$diagnosis == 'ABMR')
-
-# Selects the correct patients from gene expression ratios & outcomes
-x1 = t(eMat_GSE48581_reduced[, indx])
-y1 = factor(p_GSE48581$diagnosis[indx])
-
-indx = which(p_GSE36059$diagnosis == 'NR' | p_GSE36059$diagnosis == 'ABMR')
-
-x2 = t(eMat_GSE36059_reduced[, indx])
-y2 = factor(p_GSE36059$diagnosis[indx])
-
-
-cpop_result = cpop_model(
-  x1 = x1, x2 = x2,
-  y1 = y1, y2 = y2,
-  family = "binomial",
-  alpha = 1
-)
+plot_cpop(cpop_result = cpop_result, type = "ggraph")
 ```
-
-```{r}
-# This creates final joined dataframe based on selected gene combinations
-abmr_nonrej_features = bind_rows(data.frame(cpop_result$z1, check.names = FALSE), data.frame(cpop_result$z2, check.names = FALSE)) %>%
-  select(cpop_result$feature)
-abmr_nonrej_outcome = c(y1, y2)
-```
-
-
-
-
 
 ### Random Forest Classifier
 
@@ -734,36 +719,7 @@ https://bmcbioinformatics.biomedcentral.com/articles/10.1186/s12859-017-1925-0
 pima
 ```
 
-## Explainability
 
-```{r}
-# Required package for biomaRt
-# BiocManager::install("biomaRt")
-library(biomaRt)
-ensembl = useMart("ensembl", dataset = "hsapiens_gene_ensembl")
-ensembl
-GB_ACC = fData(GSE36059)$GB_ACC
-dat = getBM(attributes = c("protein_id", "embl", "hgnc_symbol"), values = GB_ACC, mart = ensembl)
-
-
-```
-
-
-This library helps with the explainability by showing the molecular pathway that a gene is related to.
-
-```{r}
-library(msigdbr)
-
-# Get all species in this database
-msigdbr_species()
-
-# All gene sets of a humans
-all_gene_sets = msigdbr(species = "Homo sapiens")
-
-all_gene_sets %>%
-  filter(human_gene_symbol == "M87338")
-head(all_gene_sets)
-```
 
 
 ## Junk Code
@@ -897,4 +853,107 @@ eMat_GSE36059_ratios = eMat_GSE36059_ratios %>% remove_rownames %>% column_to_ro
 eMat_GSE48581_ratios
 eMat_GSE36059_ratios
 
+```
+
+
+
+Junk EnrichKEGG code
+
+```{r}
+
+# Combined datasets into matrix
+eMat_combined = cbind(eMat_GSE48581, eMat_GSE36059)
+
+# Get only genes relevant to ABMR and TCMR respectively
+eMat_combined_ABMR = eMat_combined[genes_selected_ABMR,]
+eMat_combined_TCMR = eMat_combined[genes_selected_TCMR,]
+# Get 
+FC_TCMR = tT_TCMR[genes_selected_TCMR,]
+FC_ABMR = tT_ABMR[genes_selected_ABMR,]
+
+# Biological ID Translator
+# Get ABMR genes
+translated_ABMR = bitr(rownames(eMat_combined_ABMR),
+     fromType = "SYMBOL",
+     toType = "ENTREZID",
+     OrgDb = "org.Hs.eg.db"
+     )
+
+# Get TCMR genes
+translated_TCMR = bitr(rownames(eMat_combined_TCMR),
+     fromType = "SYMBOL",
+     toType = "ENTREZID",
+     OrgDb = "org.Hs.eg.db"
+     )
+
+# Get gene list with ENTREZID
+
+FC_ABMR_ENTREZID = FC_ABMR %>% 
+  dplyr::select(logFC) %>% 
+  filter(row.names(tT_ABMR) %in% translated_ABMR$SYMBOL)
+
+row.names(tT_ABMR) %in% translated_ABMR$SYMBOL
+row.names(FC_ABMR_ENTREZID) = translated_ABMR$ENTREZID
+
+#UNSOLVED WHY THE FUCK IS THERE ONE EXTRA INDEX
+FC_TCMR_ENTREZID = FC_TCMR %>% 
+  dplyr::select(logFC) %>% 
+  filter(row.names(tT_TCMR) %in% translated_TCMR$SYMBOL)
+  
+row.names(FC_TCMR_ENTREZID) = translated_TCMR$ENTREZID
+
+# Get combined expression matrix with ENTREZID
+eMat_combined_ABMR_ENTREZID = eMat_combined_ABMR[which(rownames(eMat_combined_ABMR) %in% translated_ABMR$SYMBOL), ]
+rownames(eMat_combined_ABMR_ENTREZID) = translated_ABMR$ENTREZID
+
+#UNSOLVED WHY THE FUCK IS THERE ONE EXTRA INDEX
+eMat_combined_TCMR_ENTREZID = eMat_combined_TCMR[which(rownames(eMat_combined_TCMR) %in% translated_TCMR$SYMBOL), ]
+rownames(eMat_combined_TCMR_ENTREZID) = translated_TCMR$ENTREZID
+
+
+
+
+
+
+bitr(rownames(eMat_combined_ABMR_ENTREZID),
+     fromType = "SYMBOL",
+     toType = "ENTREZID",
+     OrgDb = "org.Hs.eg.db"
+     )
+
+sum(duplicated(translated_TCMR$ENTREZID))
+
+
+```
+
+
+## Explainability
+
+```{r}
+# Required package for biomaRt
+# BiocManager::install("biomaRt")
+library(biomaRt)
+ensembl = useMart("ensembl", dataset = "hsapiens_gene_ensembl")
+ensembl
+GB_ACC = fData(GSE36059)$GB_ACC
+dat = getBM(attributes = c("protein_id", "embl", "hgnc_symbol"), values = GB_ACC, mart = ensembl)
+
+
+```
+
+
+This library helps with the explainability by showing the molecular pathway that a gene is related to.
+
+```{r}
+library(msigdbr)
+
+# Get all species in this database
+msigdbr_species()
+
+# All gene sets of a humans
+all_gene_sets = msigdbr(species = "Homo sapiens")
+
+all_gene_sets %>%
+  filter(human_gene_symbol == "M87338")
+head(all_gene_sets)
 ```
