@@ -66,14 +66,14 @@ shinyUI(navbarPage(theme = shinytheme("flatly"),
                                                   
                                                   titlePanel("Uploading Files"),
                                                   
-                                                  fileInput('target_upload', 'Choose file to upload',
+                                                  fileInput('target_upload1', 'Choose file to upload',
                                                             accept = c(
                                                                     'text/csv',
                                                                     'text/comma-separated-values',
                                                                     '.csv'
                                                             )),
                                                   tags$hr(),
-                                                  radioButtons("dis", "Display",
+                                                  radioButtons("dis1", "Display",
                                                                choices = c(Head = "head",
                                                                            All = "all"),
                                                                selected = "head"),
@@ -81,7 +81,7 @@ shinyUI(navbarPage(theme = shinytheme("flatly"),
                                                   actionButton("showTab", "Show Prediction"),
                                           ),
                                           mainPanel(
-                                                  DTOutput('tbl'),
+                                                  DTOutput("ab"),
                                                   
                                           )
                                   )
@@ -158,7 +158,7 @@ shinyUI(navbarPage(theme = shinytheme("flatly"),
                             actionButton("showTab", "Show Prediction"),
                                     ),
                             mainPanel(
-                                    DTOutput('tbl'),
+                                    DTOutput("abc"),
                                     
                             )
                             )
