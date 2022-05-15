@@ -55,6 +55,11 @@ shinyUI(navbarPage(theme = shinytheme("flatly"),
                           
                           tabPanel(
                                   title = "Prediction",
+                                  
+                                  tabsetPanel(id = "tabset4",
+                                              
+                                  tabPanel(
+                                  title= "File Input",
                                   sidebarLayout(
                                           
                                           sidebarPanel(
@@ -80,8 +85,14 @@ shinyUI(navbarPage(theme = shinytheme("flatly"),
                                                   
                                           )
                                   )
+                          ),
+                          tabPanel(
+                                  title="Manual Input",
                           )
+                          
               )
+     )
+     )
      ),
 
      tabPanel("TCMR Analysis", 
@@ -122,6 +133,10 @@ shinyUI(navbarPage(theme = shinytheme("flatly"),
                           
                           tabPanel(
                             title = "Prediction",
+                            tabsetPanel(id = "tabset3",
+                            
+                            tabPanel(
+                            title= "File Input",
                             sidebarLayout(
                                     
                                     sidebarPanel(
@@ -147,8 +162,11 @@ shinyUI(navbarPage(theme = shinytheme("flatly"),
                                     
                             )
                             )
+                          ),
+                          tabPanel(
+                          title="Manual Input",
                           )
               )
      )
      
-))
+))))
