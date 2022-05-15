@@ -937,26 +937,217 @@ head(all_gene_sets)
 
 
 
+VIS
 
-### Classifier Model for GSE36059
+Autoencoder, not effective, don't run
+
 ```{r}
-count=0
-for(i in a$`diagnosis:ch1`){
-  if(i=="non-rejecting")
-{
-  GSE36059$outcome[count]="Stable"
-}else if(i=="ABMR")
-{
-  GSE36059$outcome[count]="LongTermRejection"
-}else if(i=="MIXED")
-{
-  GSE36059$outcome[count]="LongandShortTermRejection"
-}else if(i=="TCMR")
-{
-  GSE36059$outcome[count]="ShortTermRejection"
-}
-  count=count+1
-}
+library(keras)
+library(tensorflow)
+library(tidyverse)
+
+x_train <- as.matrix(abmr_nonrej_features)
+
+model <- keras_model_sequential()
+
+model %>% 
+  layer_dense(units = 6, activation = "tanh", input_shape = ncol(x_train)) %>%
+  layer_dense(units = 2, activation = "tanh", name = "bottleneck") %>% 
+  layer_dense(units = 6, activation = "tanh") %>% 
+  layer_dense(units = ncol(x_train))
+
+summary(model)
+
+intermediate <- keras_model(inputs = model$input, outputs = get_layer(model, "bottleneck")$output)
+intermediate_output <- predict(intermediate, x_train)
+
+ggplot(data.frame(PC1 = intermediate_output[,1], PC2 = intermediate_output[,2]), aes(x=PC1, y = PC2, col=abmr_nonrej_outcome)) + geom_point(size=0.75)
+
+#pca_plotly <- plot_ly(data.frame(PC1 = intermediate_output[,1], PC2 = intermediate_output[,2], PC3 = intermediate_output[,3]), x = ~PC1, y = ~PC2, z = ~PC3, color = ~abmr_nonrej_outcome, colors = c("#BF382A", "#0C4B8E"))
+#pca_plotly
+```
+
+PCA, somewhat ok plot
+
+```{r}
+library(factoextra)
+library(plotly)
+library(DAAG)
+library(FactoMineR)
+library(scatterplot3d)
+library(ggforce)
+
+res.pca <- prcomp(abmr_nonrej_features)
+
+fviz_screeplot(res.pca, ncp=10)
+
+df_toplot <- data.frame(abmr_nonrej_outcome, 
+                        pc1 = res.pca$x[,1], pc2 = res.pca$x[,2])
+
+g <- ggplot(df_toplot, aes(x = pc1, y = pc2, color = abmr_nonrej_outcome)) + 
+  geom_point(size = 0.75) + 
+  theme_minimal()
+g
+
+# colors = c("#BF382A", "#0C4B8E")
+# colors <- colors[as.numeric(abmr_nonrej_outcome)]
+# pca_plotly <- scatterplot3d(res.pca$x[,1:3], color = colors, box = FALSE, pch = 16) 
+
+pca_plotly <- plot_ly(as.data.frame(res.pca$x), x = ~PC1, y = ~PC2, z = ~PC3, color = ~abmr_nonrej_outcome, colors = c("#BF382A", "#0C4B8E"))
+pca_plotly
+```
+
+UMAP!!
+
+```{r}
+library(umap)
+
+abmr.umap = umap(abmr_nonrej_features)
+
+ggplot(data.frame(pc1 = abmr.umap$layout[,1], pc2 = abmr.umap$layout[,2]), aes(x = pc1, y = pc2, color = abmr_nonrej_outcome)) + geom_point(size = 0.75)
+```
+
+t-SNE
+
+```{r}
+#library(Rtsne)
+#library(ggpubr)
+set.seed(42)
+
+tSNE_fit <- as.matrix(abmr_nonrej_features) %>% normalize_input() %>% Rtsne(perplexity = 200)
+
+tSNE_df <- tSNE_fit$Y %>% 
+  as.data.frame() %>%
+  dplyr::rename(tSNE1="V1",
+         tSNE2="V2")
+
+a <- ggplot(tSNE_df, aes(x = tSNE1, y = tSNE2, color = abmr_nonrej_outcome)) + geom_point(size = 0.75)
+a
+```
+
+kernel pca
+
+```{r}
+library(kernlab)
+
+nonlinear_pca <- kpca(as.matrix(abmr_nonrej_features), kernel = "rbfdot", kpar = list(sigma = 0.01), features = 2, th = 1e-4)
+
+to.plot = as.data.frame(rotated(nonlinear_pca))
+
+b <- ggplot(to.plot, aes(x = V1, y = V2, color = abmr_nonrej_outcome)) + geom_point(size = 0.75)
+b
+
+nonlinear_pca <- kpca(as.matrix(abmr_nonrej_features), kernel = "rbfdot", kpar = list(sigma = 0.01), features = 3, th = 1e-4)
+
+to.plot = as.data.frame(rotated(nonlinear_pca))
+
+pca_plotly <- plot_ly(to.plot, x = ~V1, y = ~V2, z = ~V3, color = ~abmr_nonrej_outcome, colors = c("#BF382A", "#0C4B8E"))
+pca_plotly
 
 ```
 
+testing others
+
+```{r}
+tSNE_fit <- as.matrix(abmr_nonrej_features)  %>% normalize_input() %>% Rtsne(perplexity = 10)
+
+tSNE_df <- tSNE_fit$Y %>% 
+  as.data.frame() %>%
+  dplyr::rename(tSNE1="V1",
+         tSNE2="V2")
+
+b <- ggplot(tSNE_df, aes(x = tSNE1, y = tSNE2, color = abmr_nonrej_outcome)) + geom_point(size = 0.75)
+
+
+tSNE_fit <- as.matrix(abmr_nonrej_features)  %>% normalize_input() %>% Rtsne(perplexity = 15)
+
+tSNE_df <- tSNE_fit$Y %>% 
+  as.data.frame() %>%
+  dplyr::rename(tSNE1="V1",
+         tSNE2="V2")
+
+c <- ggplot(tSNE_df, aes(x = tSNE1, y = tSNE2, color = abmr_nonrej_outcome)) + geom_point(size = 0.75)
+
+
+tSNE_fit <- as.matrix(abmr_nonrej_features)  %>% normalize_input() %>% Rtsne(perplexity = 20)
+
+tSNE_df <- tSNE_fit$Y %>% 
+  as.data.frame() %>%
+  dplyr::rename(tSNE1="V1",
+         tSNE2="V2")
+
+d <- ggplot(tSNE_df, aes(x = tSNE1, y = tSNE2, color = abmr_nonrej_outcome)) + geom_point(size = 0.75)
+
+
+tSNE_fit <- as.matrix(abmr_nonrej_features)  %>% normalize_input() %>% Rtsne(perplexity = 25)
+
+tSNE_df <- tSNE_fit$Y %>% 
+  as.data.frame() %>%
+  dplyr::rename(tSNE1="V1",
+         tSNE2="V2")
+
+e <- ggplot(tSNE_df, aes(x = tSNE1, y = tSNE2, color = abmr_nonrej_outcome)) + geom_point(size = 0.75)
+
+
+tSNE_fit <- as.matrix(abmr_nonrej_features)  %>% normalize_input() %>% Rtsne(perplexity = 30)
+
+tSNE_df <- tSNE_fit$Y %>% 
+  as.data.frame() %>%
+  dplyr::rename(tSNE1="V1",
+         tSNE2="V2")
+
+f <- ggplot(tSNE_df, aes(x = tSNE1, y = tSNE2, color = abmr_nonrej_outcome)) + geom_point(size = 0.75)
+
+
+
+tSNE_fit <- as.matrix(abmr_nonrej_features)  %>% normalize_input() %>% Rtsne(perplexity = 35)
+
+tSNE_df <- tSNE_fit$Y %>% 
+  as.data.frame() %>%
+  dplyr::rename(tSNE1="V1",
+         tSNE2="V2")
+
+g <- ggplot(tSNE_df, aes(x = tSNE1, y = tSNE2, color = abmr_nonrej_outcome)) + geom_point(size = 0.75)
+
+
+
+tSNE_fit <- as.matrix(abmr_nonrej_features)  %>% normalize_input() %>% Rtsne(perplexity = 40)
+
+tSNE_df <- tSNE_fit$Y %>% 
+  as.data.frame() %>%
+  dplyr::rename(tSNE1="V1",
+         tSNE2="V2")
+
+h <- ggplot(tSNE_df, aes(x = tSNE1, y = tSNE2, color = abmr_nonrej_outcome)) + geom_point(size = 0.75)
+
+
+
+tSNE_fit <- as.matrix(abmr_nonrej_features)  %>% normalize_input() %>% Rtsne(perplexity = 45)
+
+tSNE_df <- tSNE_fit$Y %>% 
+  as.data.frame() %>%
+  dplyr::rename(tSNE1="V1",
+         tSNE2="V2")
+
+i <- ggplot(tSNE_df, aes(x = tSNE1, y = tSNE2, color = abmr_nonrej_outcome)) + geom_point(size = 0.75)
+
+
+
+
+tSNE_fit <- as.matrix(abmr_nonrej_features)  %>% normalize_input() %>% Rtsne(perplexity = 50)
+
+tSNE_df <- tSNE_fit$Y %>% 
+  as.data.frame() %>%
+  dplyr::rename(tSNE1="V1",
+         tSNE2="V2")
+
+j <- ggplot(tSNE_df, aes(x = tSNE1, y = tSNE2, color = abmr_nonrej_outcome)) + geom_point(size = 0.75)
+
+
+ggarrange(a,b, labels = c("5", "10"), ncol = 1, nrow = 2)
+ggarrange(c,d, labels = c("15", "20"), ncol = 1, nrow = 2)
+ggarrange(e,f, labels = c("25", "30"), ncol = 1, nrow = 2)
+ggarrange(g,h, labels = c("35", "40"), ncol = 1, nrow = 2)
+ggarrange(i,j, labels = c("45", "50"), ncol = 1, nrow = 2) 
+
+```
