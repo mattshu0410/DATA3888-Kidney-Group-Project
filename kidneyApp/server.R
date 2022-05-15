@@ -31,31 +31,79 @@ shinyServer(function(input, output) {
     make_treeplot(FC_TCMR_ENTREZID)
   }) 
   
+  observeEvent(input$showTab, {
+    
+    # select = TRUE immediately brings user to prediction page
+    insertTab(inputId = "tabs",
+              tabPanel("Prediction", position ="after"), select = TRUE)
+    shinyjs::hide("showTab")
+  })
+  
+  # hide the action button initially
+  observe({
+    shinyjs::hide("showTab")
+  })
+  
+  # if csv added, show action button
+  observeEvent(input$target_upload, {
+    current_data = mydata()
+    if (!is.null(current_data)) {
+      shinyjs::show("showTab")
+    }
+  })
+  
+  
   mydata <- reactive({
     
     # string file name
     inFile <- input$target_upload
     
+    
     if (is.null(inFile))
       return(NULL)
     
     # reading file
-    tbl <- read.csv(inFile$datapath)
+    abc <- read.csv(inFile$datapath)
     
     
-    
-    if(input$disp == "head") {
-      return(head(tbl))
+    if(input$dis == "head") {
+      return(head(abc))
     }
     else {
-      return(tbl)
+      return(abc)
     }
+    
     
   })
   
+  mydata1 <- reactive({
+    
+    # string file name
+    File <- input$target_upload1
+    
+    if (is.null(File))
+      return(NULL)
+    
+    # reading file
+    ab <- read.csv(File$datapath)
+    
+    
+    if(input$dis1 == "head") {
+      return(head(ab))
+    }
+    else {
+      return(ab)
+    }
+    
+    
+  })
   # rendering table in File Upload page
-  output$tbl = DT::renderDT({
+  output$abc = DT::renderDT({
     mydata()
+  })
+  
+  output$ab = DT::renderDT({
+    mydata1()
   })
   
 })
