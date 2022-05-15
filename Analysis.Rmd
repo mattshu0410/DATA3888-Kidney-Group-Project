@@ -643,7 +643,7 @@ Constructing a model based on random forest using log-fold ratios which were sel
 ```{r}
 
 cvK = 5
-n_sim = 1
+n_sim = 3
 
 
 #X = t(as.matrix(eMat_GSE48581_ratios %>% select(-1, -2)))
@@ -676,13 +676,36 @@ Methods section: https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5470931/
 We can potentially include a penalty for the comorbidities present in the transplant recipient by using the Charlson Comorbidity Score. However I can't find a dataset for this yet.
 https://pubmed.ncbi.nlm.nih.gov/29731067/
 
-Support Vector Machine
-Random Forest
-KNN
+* Linear methods: Linear Discriminant Analysis and Logistic Regression.
+* Non-Linear methods: Neural Network, SVM, kNN and Naive Bayes
+* Trees and Rules: CART, J48 and PART
+* Ensembles of Trees: C5.0, Bagged CART, Random Forest and Stochastic Gradient Boosting
 https://bmcbioinformatics.biomedcentral.com/articles/10.1186/s12859-017-1925-0
 
 
 ## Model Evaluation
+
+Clear description of the approach in data collection, developed model, the evaluation strategies from a data-science perspective. Here we refer to all types of evaluation metrics including graphical, qualitative and quantitative metric.
+
+A clear justification of the final approach based on the proposed evaluation strategies. Ensuring multiple evaluation strategies are used.
+
+Accuracy
+
+* Cross-Validation
+* PRC-AUC Curve
+
+Stability
+
+* Stability on datasets with ABMR
+* Stability vs Accuracy (Stability evaluated on original datasets)
+* Progressively adding more noise to the original dataset and observing model performance (maybe an overlay of line plots)
+
+Interpretability
+
+* Depth of tree versus cross-validated accuracy
+
+Justification for PRC-AUC: https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4349800/
+Interpretability: https://christophm.github.io/interpretable-ml-book/scope-of-interpretability.html
 
 ### Test Dataset to Pairwise Gene Differences
 
