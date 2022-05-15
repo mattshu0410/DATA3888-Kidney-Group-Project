@@ -59,6 +59,9 @@ gene_symbols = fData(GSE36059) %>%
   dplyr::select(ID, `Gene Symbol`) 
 kept_gene_symbols = gene_symbols[idx,] %>% dplyr::pull(`Gene Symbol`)
 
+# Map Affymetrix gene probe to gene symbol
+AFFX_gene_symbols = gene_symbols[idx,]
+
 # Replace probe ids with gene names
 rownames(eMat_GSE36059) = lapply(strsplit(kept_gene_symbols, ' /// ', 1), `[`, 1)
 
@@ -361,3 +364,35 @@ tcmr_nonrej_features = tcmr_cpop_results$features
 tcmr_nonrej_outcome = tcmr_cpop_results$outcome
 
 plot_cpop(cpop_result = cpop_result, type = "ggraph")
+
+################################## Model Prediction ##################################
+
+# Input row of two gene symbols to find difference
+# Output difference in relevant expressions in test_case
+difference_from_pair = function(x){
+  from = AFFX_gene_symbols$ID[AFFX_gene_symbols$`Gene Symbol` == x[1]]
+  to = AFFX_gene_symbols$ID[AFFX_gene_symbols$`Gene Symbol` == x[2]]
+  print(from)
+  print(to)
+  return(test_case$expr[test_case$probe_id == from] - test_case$expr[test_case$probe_id == to])
+}
+
+# Input feature names df from CPOP, test_case with probe ID & expression
+# Output feature vector of relevant pairwise differences
+get_pairwise_differences = function(features, test_case){
+  
+  feature_names = data.frame(names(features)) %>%
+    tidyr::separate(`names.features.`,c("from", "to"), "--")
+  
+  feature_names %>%
+    dplyr::select(from, to) %>%
+    apply(., 1, difference_from_pair)
+}
+
+get_genes_for_sliders = function(features){
+  names(features) %>%
+    sapply(., function(x){str_split(x,'--')}) %>%
+    unlist() %>%
+    unique()
+}
+
