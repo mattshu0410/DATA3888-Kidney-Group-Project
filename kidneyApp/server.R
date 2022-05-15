@@ -29,6 +29,33 @@ shinyServer(function(input, output) {
   
   output$treePlotTCMR <- renderPlot({
     make_treeplot(FC_TCMR_ENTREZID)
-  })  
+  }) 
+  
+  mydata <- reactive({
+    
+    # string file name
+    inFile <- input$target_upload
+    
+    if (is.null(inFile))
+      return(NULL)
+    
+    # reading file
+    tbl <- read.csv(inFile$datapath)
+    
+    
+    
+    if(input$disp == "head") {
+      return(head(tbl))
+    }
+    else {
+      return(tbl)
+    }
+    
+  })
+  
+  # rendering table in File Upload page
+  output$tbl = DT::renderDT({
+    mydata()
+  })
   
 })
