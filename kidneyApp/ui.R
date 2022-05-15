@@ -165,8 +165,21 @@ shinyUI(navbarPage(theme = shinytheme("flatly"),
                           ),
                           tabPanel(
                           title="Manual Input",
+                          sidebarLayout(
+                                  
+                                  sidebarPanel(
+                                          uiOutput("sliders"),
+                                  ),
+                                  
+                                  # Main panel for displaying outputs ----
+                                  mainPanel(
+                                          
+                                          # Output: Table summarizing the values entered ----
+                                          tableOutput("values"),
+                                          
+                                  )
                           )
               )
      )
      
-))))
+)))))
