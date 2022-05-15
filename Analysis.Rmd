@@ -727,7 +727,7 @@ get_pairwise_differences(abmr_nonrej_features)
 ```
 
 ```{r}
-get_genes_for_sliders(features){
+get_genes_for_sliders = function(features){
   names(features) %>%
   sapply(., function(x){str_split(x,'--')}) %>%
   unlist() %>%
