@@ -54,7 +54,32 @@ shinyUI(navbarPage(theme = shinytheme("flatly"),
                           ),
                           
                           tabPanel(
-                            title = "Prediction",
+                                  title = "Prediction",
+                                  sidebarLayout(
+                                          
+                                          sidebarPanel(
+                                                  
+                                                  titlePanel("Uploading Files"),
+                                                  
+                                                  fileInput('target_upload', 'Choose file to upload',
+                                                            accept = c(
+                                                                    'text/csv',
+                                                                    'text/comma-separated-values',
+                                                                    '.csv'
+                                                            )),
+                                                  tags$hr(),
+                                                  radioButtons("dis", "Display",
+                                                               choices = c(Head = "head",
+                                                                           All = "all"),
+                                                               selected = "head"),
+                                                  tags$hr(),
+                                                  actionButton("showTab", "Show Prediction"),
+                                          ),
+                                          mainPanel(
+                                                  DTOutput('tbl'),
+                                                  
+                                          )
+                                  )
                           )
               )
      ),
@@ -97,6 +122,31 @@ shinyUI(navbarPage(theme = shinytheme("flatly"),
                           
                           tabPanel(
                             title = "Prediction",
+                            sidebarLayout(
+                                    
+                                    sidebarPanel(
+                                            
+                            titlePanel("Uploading Files"),
+                            
+                            fileInput('target_upload', 'Choose file to upload',
+                                      accept = c(
+                                              'text/csv',
+                                              'text/comma-separated-values',
+                                              '.csv'
+                                      )),
+                            tags$hr(),
+                            radioButtons("dis", "Display",
+                                         choices = c(Head = "head",
+                                                     All = "all"),
+                                         selected = "head"),
+                            tags$hr(),
+                            actionButton("showTab", "Show Prediction"),
+                                    ),
+                            mainPanel(
+                                    DTOutput('tbl'),
+                                    
+                            )
+                            )
                           )
               )
      )
