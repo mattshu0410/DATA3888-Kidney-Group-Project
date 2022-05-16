@@ -140,7 +140,7 @@ gene_symbols = fData(GSE36059) %>%
 kept_gene_symbols = gene_symbols[idx,] %>% dplyr::pull(`Gene Symbol`)
 
 # Map Affymetrix gene probe to gene symbol
-AFFX_gene_symbols = gene_symbols[idx,]
+AFFX_gene_symbols = gene_symbols[idx,] %>% mutate(`Gene Symbol` = all_gene_symbols[idx] )
 
 # Replace probe ids with gene names
 rownames(eMat_GSE36059) = lapply(strsplit(kept_gene_symbols, ' /// ', 1), `[`, 1)
@@ -587,7 +587,47 @@ tcmr_nonrej_features
 
 ## Model Building
 
+### PCA
+
+```{r}
+# New x projections on rotated set of axes
+pca_df = prcomp(tcmr_nonrej_features, retx = TRUE)
+# This binds original rows of x-values for each variable in the expression matrix dataset with the corresponding row of principal components for the data
+pca_plot_df = data.frame(pca_df$x) %>%
+  cbind("Outcome" = tcmr_nonrej_outcome)
+
+summary(pca_df)
+
+names(summary(df_pca))
+
+PC1_var = round(summary(df_pca)$importance[2] * 100, 2)
+PC2_var = round(summary(df_pca)$importance[5] * 100, 2)
+
+rej_healthy_col = c("NR" = "#5ADA8B","TCMR" = "#FF5833")
+ggplot(pca_plot_df,
+       aes(x=PC1,
+           y=PC2,
+           color=Outcome
+           )) +
+  geom_point(alpha=0.7) +
+  scale_color_manual(values = rej_healthy_col) +
+  theme_bw() +
+  labs(title = "PCA of Gene Expression by Kidney Transplant Outcome", 
+       color = "Outcome",
+       x = paste("PC1", " (", PC1_var,"%)", sep=""),
+       y = paste("PC2", " (", PC2_var,"%)", sep=""))
+
+```
+
+
 ### Random Forest Classifier
+
+```{r}
+
+randomForest::randomForest(x = X_train, y = as.factor(y_train))
+
+
+```
 
 A generic cross-validation function.
 
