@@ -5,8 +5,11 @@ library(DT)
 library(shinyalert)
 
 # Define UI for application that draws a histogram
-shinyUI(navbarPage(theme = shinytheme("flatly"), 
-                   title = "Kidney C1", 
+shinyUI(navbarPage(tags$head(
+        tags$link(rel = "stylesheet", type = "text/css", href = "mystyle.css")
+),
+                   theme = shinytheme("flatly"),
+                   title = img(src = "logo1.jpg",inline=TRUE, id="logo"),
                    fluid=TRUE, 
 
      useShinyjs(),
