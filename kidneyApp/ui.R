@@ -5,8 +5,11 @@ library(DT)
 library(shinyalert)
 
 # Define UI for application that draws a histogram
-shinyUI(navbarPage(theme = shinytheme("flatly"), 
-                   title = "Kidney C1", 
+shinyUI(navbarPage(tags$head(
+        tags$link(rel = "stylesheet", type = "text/css", href = "mystyle.css")
+),
+                   theme = shinytheme("flatly"),
+                   title = img(src = "logo1.jpg",inline=TRUE, id="logo"),
                    fluid=TRUE, 
 
      useShinyjs(),
@@ -54,9 +57,45 @@ shinyUI(navbarPage(theme = shinytheme("flatly"),
                           ),
                           
                           tabPanel(
-                            title = "Prediction",
+                                  title = "Prediction",
+                                  
+                                  tabsetPanel(id = "tabset4",
+                                              
+                                  tabPanel(
+                                  title= "File Input",
+                                  sidebarLayout(
+                                          
+                                          sidebarPanel(
+                                                  
+                                                  titlePanel("Uploading Files"),
+                                                  
+                                                  fileInput('target_upload1', 'Choose file to upload',
+                                                            accept = c(
+                                                                    'text/csv',
+                                                                    'text/comma-separated-values',
+                                                                    '.csv'
+                                                            )),
+                                                  tags$hr(),
+                                                  radioButtons("dis1", "Display",
+                                                               choices = c(Head = "head",
+                                                                           All = "all"),
+                                                               selected = "head"),
+                                                  tags$hr(),
+                                                  actionButton("showTab", "Show Prediction"),
+                                          ),
+                                          mainPanel(
+                                                  DTOutput("ab"),
+                                                  
+                                          )
+                                  )
+                          ),
+                          tabPanel(
+                                  title="Manual Input",
                           )
+                          
               )
+     )
+     )
      ),
 
      tabPanel("TCMR Analysis", 
@@ -97,8 +136,53 @@ shinyUI(navbarPage(theme = shinytheme("flatly"),
                           
                           tabPanel(
                             title = "Prediction",
+                            tabsetPanel(id = "tabset3",
+                            
+                            tabPanel(
+                            title= "File Input",
+                            sidebarLayout(
+                                    
+                                    sidebarPanel(
+                                            
+                            titlePanel("Uploading Files"),
+                            
+                            fileInput('target_upload', 'Choose file to upload',
+                                      accept = c(
+                                              'text/csv',
+                                              'text/comma-separated-values',
+                                              '.csv'
+                                      )),
+                            tags$hr(),
+                            radioButtons("dis", "Display",
+                                         choices = c(Head = "head",
+                                                     All = "all"),
+                                         selected = "head"),
+                            tags$hr(),
+                            actionButton("showTab", "Show Prediction"),
+                                    ),
+                            mainPanel(
+                                    DTOutput("abc"),
+                                    
+                            )
+                            )
+                          ),
+                          tabPanel(
+                          title="Manual Input",
+                          sidebarLayout(
+                                  
+                                  sidebarPanel(
+                                          uiOutput("sliders"),
+                                  ),
+                                  
+                                  # Main panel for displaying outputs ----
+                                  mainPanel(
+                                          
+                                          # Output: Table summarizing the values entered ----
+                                          tableOutput("values"),
+                                          
+                                  )
                           )
               )
      )
      
-))
+)))))

@@ -468,24 +468,26 @@ Kyoto Encyclopedia of Genes and Genomes is a database which helps us understand 
 
 ```{r}
 #search_kegg_organism('hsa', by='kegg_code')
+get_KEGG_plot = function(geneList){
+  # Searches for relevant pathways based on selected genes
+  kk = enrichKEGG(gene = names(geneList),
+                  organism = 'hsa',
+                  pvalueCutoff = 0.05)
+  # Shows upregulated pathways, pay attention to ID column
+  for (id in head(kk)$ID){
+    # Saves an image of the pathway in root as {ID}.pathview.png e.g. hsa05332.pathview.png
+    pathview(gene.data  = geneList,
+           pathway.id = id,
+           species    = "hsa",
+           limit      = list(gene=max(abs(geneList)), cpd=1))
+  }
+}
 
-# Searches for relevant pathways based on selected genes
-kk = enrichKEGG(gene = translated$ENTREZID,
-                organism = 'hsa',
-                pvalueCutoff = 0.05)
+```
 
-# Shows upregulated pathways, pay attention to ID column
-head(kk)
-
-# Displays upregulated pathway of ID = 'hsa05332' in browser
-browseKEGG(kk, 'hsa05332')
-
-# Saves an image of the pathway in root as {ID}.pathview.png e.g. hsa05332.pathview.png
-hsa05332 = pathview(gene.data  = geneList,
-                     pathway.id = "hsa05332",
-                     species    = "hsa",
-                     limit      = list(gene=max(abs(geneList)), cpd=1))
-
+```{r}
+# Saves in local folder
+get_KEGG_plot(FC_TCMR_ENTREZID)
 ```
 
 #### Using the Plot Functions
@@ -667,9 +669,12 @@ cross_validation = function(n, cvK, n_sim, X, y){
       cv_acc_svm[j] = mean(y_test == fit)
   
       ## Random Forest
-      rf_res <- randomForest::randomForest(x = X_train, y = as.factor(y_train))
-      fit <- predict(rf_res, X_test)
+      rf_res = randomForest::randomForest(x = X_train, y = as.factor(y_train))
+      fit = predict(rf_res, X_test)
       cv_acc_rf[j] = mean(y_test == fit)
+      
+      ## GLM
+      glm = 
     }
     cv_rep_acc_rf = append(cv_rep_acc_rf, mean(cv_acc_rf))
   }
@@ -709,6 +714,15 @@ boxplot(acc)
 
 ```
 
+```{r}
+
+train = data.frame(cbind(X,y))
+model = glm(y~., family = binomial(link = "logit"), data = train)
+
+
+
+```
+
 We can use an ensemble of different classifiers and take the median probability to generate a more stable prediction. Stability of your model/process is particularly important.
 
 Methods section: https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5470931/
@@ -719,7 +733,7 @@ https://pubmed.ncbi.nlm.nih.gov/29731067/
 * Linear methods: Linear Discriminant Analysis and Logistic Regression.
 * Non-Linear methods: Neural Network, SVM, kNN and Naive Bayes
 * Trees and Rules: CART, J48 and PART
-* Ensembles of Trees: C5.0, Bagged CART, Random Forest and Stochastic Gradient Boosting
+* Ensembles of Trees: C5.0, Bagged CART, Random Forest and Stochastic Gradient Boosyting
 https://bmcbioinformatics.biomedcentral.com/articles/10.1186/s12859-017-1925-0
 
 
@@ -743,6 +757,11 @@ Stability
 Interpretability
 
 * Depth of tree versus cross-validated accuracy
+
+Fairness
+
+* Gender
+Significant Genes between Gender: https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0004802#pone.0004802.s005
 
 Justification for PRC-AUC: https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4349800/
 Interpretability: https://christophm.github.io/interpretable-ml-book/scope-of-interpretability.html
