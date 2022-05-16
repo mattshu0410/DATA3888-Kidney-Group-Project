@@ -108,13 +108,11 @@ shinyServer(function(input, output) {
   
   
   output$sliders <- renderUI({
-    # First, create a list of sliders each with a different name
     a=get_genes_for_sliders(tcmr_nonrej_features)
     sliders <- lapply(1:length(a), function(i) {
       inputName <- a[i]
-      sliderInput(inputName, inputName, min=5, max=20, value=10, post="%")
+      sliderInput(inputName, inputName, min=5, max=20, value=10)
     })
-    # Create a tagList of sliders (this is important)
     do.call(tagList, sliders)
   })
   
