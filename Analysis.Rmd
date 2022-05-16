@@ -718,6 +718,9 @@ get_PCA_plot = function(train_features, train_outcomes, test_features, positive_
   return(ggplotly(p))
 }
 
+# Example of using the get_PCA_plot function
+# You may pass any of the following as class_model = {"log", "svm", "tree", "rf", "knn"}
+# It will use the respective model to make a prediction on the test data and plot it on the PCA graph
 get_PCA_plot(tcmr_nonrej_features, tcmr_nonrej_outcome, test_tcmr_nonrej, "TCMR", "log")
 get_PCA_plot(abmr_nonrej_features, abmr_nonrej_outcome, test_abmr_nonrej, "ABMR", "knn")
 
