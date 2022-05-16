@@ -60,7 +60,7 @@ gene_symbols = fData(GSE36059) %>%
 kept_gene_symbols = gene_symbols[idx,] %>% dplyr::pull(`Gene Symbol`)
 
 # Map Affymetrix gene probe to gene symbol
-AFFX_gene_symbols = gene_symbols[idx,]
+AFFX_gene_symbols = gene_symbols[idx,] %>% mutate(`Gene Symbol` = all_gene_symbols[idx] )
 
 # Replace probe ids with gene names
 rownames(eMat_GSE36059) = lapply(strsplit(kept_gene_symbols, ' /// ', 1), `[`, 1)
