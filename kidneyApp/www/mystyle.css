@@ -1,0 +1,16 @@
+.navbar-brand {
+  padding: 0 !important;
+}
+
+#logo {
+  height: 60px;
+  width : 100px;
+}
+
+.navbar-nav > li:first-child {
+  display: none;
+}
+
+.navbar-nav > li:nth-child(2) {
+  display: none;
+}
