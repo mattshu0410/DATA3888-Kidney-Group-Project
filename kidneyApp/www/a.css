@@ -1,0 +1,8 @@
+.col-sm-8 > img {
+    transition:transform 0.25s ease;
+}
+
+.col-sm-8 >img:hover {
+    -webkit-transform:scale(3); /* or some other value */
+    transform:scale(3);
+}
