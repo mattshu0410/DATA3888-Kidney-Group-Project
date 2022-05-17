@@ -52,6 +52,15 @@ shinyUI(navbarPage(tags$head(
                                         
                                         tabPanel(
                                           title = "KEGG Enrichment Analysis",
+                                          tags$head(
+                                                  tags$link(rel = "stylesheet", type = "text/css", href = "a.css")
+                                          ),
+                                          mainPanel(
+                                                  img(id="one",src = "ABMR1.png", height = 300, width = 300),
+                                                  img(id="two",src = "ABMR2.png", height = 300, width = 300),
+                                                  img(id="three",src = "ABMR3.png", height = 300, width = 300),
+                                                  img(id="four",src = "ABMR4.png", height = 300, width = 300)
+                                          )
                                         )
                             )
                           ),
@@ -196,4 +205,3 @@ shinyUI(navbarPage(tags$head(
      )
      
 )))))
-
