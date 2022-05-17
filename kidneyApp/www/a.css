@@ -15,6 +15,10 @@
 }
 
 .col-sm-8 >img:hover {
-    -webkit-transform:scale(1.8); /* or some other value */
-    transform:scale(1.8);
+  image-rendering: auto;
+  image-rendering: crisp-edges;
+  image-rendering: pixelated;
+  image-rendering: -webkit-optimize-contrast;
+  -webkit-transform:scale(1.8); 
+  transform:scale(1.8);
 }
