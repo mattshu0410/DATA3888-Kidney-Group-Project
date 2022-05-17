@@ -5,16 +5,19 @@
   text-align: center;
 }
 
+
 .col-sm-8 img {
   max-width: 100%;
   max-height: 100%;
+  object-fit: contain;
 }
 
 .col-sm-8 > img {
-    transition:transform 0.25s ease;
+    transition:transform 1s ease;
 }
 
 .col-sm-8 >img:hover {
-  width:auto;
-  height:auto;
+   object-fit: contain;
+   -webkit-transform:scale(2.555); /* or some other value */
+    transform:scale(2.555);
 }
