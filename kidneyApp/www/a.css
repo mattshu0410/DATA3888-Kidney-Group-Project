@@ -1,8 +1,20 @@
+.col-sm-8 {
+  margin-top: 99px;
+  margin-left: 175px;
+  height: 100%;
+  text-align: center;
+}
+
+.col-sm-8 img {
+  max-width: 100%;
+  max-height: 100%;
+}
+
 .col-sm-8 > img {
     transition:transform 0.25s ease;
 }
 
 .col-sm-8 >img:hover {
-    -webkit-transform:scale(3); /* or some other value */
-    transform:scale(3);
+    -webkit-transform:scale(1.8); /* or some other value */
+    transform:scale(1.8);
 }
