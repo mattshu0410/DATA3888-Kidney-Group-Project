@@ -1018,7 +1018,7 @@ get_pairwise_differences_probe_id = function(features, test_case_probe_id){
     apply(., 1, function(x){
       from = AFFX_gene_symbols$ID[AFFX_gene_symbols$`Gene Symbol` == x[1]]
       to = AFFX_gene_symbols$ID[AFFX_gene_symbols$`Gene Symbol` == x[2]]
-      return(test_case$expr[test_case$probe_id == from] - test_case$expr[test_case$probe_id == to])
+      return(test_case_probe_id$expr[test_case_probe_id$probe_id == from] - test_case_probe_id$expr[test_case_probe_id$probe_id == to])
     })
   
   names(feature_differences) = names(features)

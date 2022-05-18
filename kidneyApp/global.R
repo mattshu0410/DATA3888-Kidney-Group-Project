@@ -385,7 +385,7 @@ get_pairwise_differences_probe_id = function(features, test_case_probe_id){
     apply(., 1, function(x){
       from = AFFX_gene_symbols$ID[AFFX_gene_symbols$`Gene Symbol` == x[1]]
       to = AFFX_gene_symbols$ID[AFFX_gene_symbols$`Gene Symbol` == x[2]]
-      return(test_case$expr[test_case$probe_id == from] - test_case$expr[test_case$probe_id == to])
+      return(test_case_probe_id$expr[test_case_probe_id$probe_id == from] - test_case_probe_id$expr[test_case_probe_id$probe_id == to])
     })
   
   names(feature_differences) = names(features)
@@ -411,6 +411,56 @@ get_pairwise_differences_gene_symbol = function(features, test_case_gene_symbol)
   names(feature_differences) = colnames(features)
   
   return(feature_differences)
+}
+
+# Single Prediction Classifiers
+
+# Logistic Regression
+log_pred = function(train_features, train_outcomes, test_features) {
+  df = data.frame(cbind(train_features, "Outcome" = train_outcomes))
+  log_reg = glm(Outcome ~ ., family = binomial(link = "logit"), data = df)
+  prediction = predict(log_reg, data.frame(t(test_features)), type = "response")
+  if (prediction <= 0.5) {
+    classifier_prediction = levels(df$Outcome)[1]
+  } else {
+    classifier_prediction = levels(df$Outcome)[2]
+  }
+  return(classifier_prediction)
+}
+
+# kNN
+knn_pred = function(train_features, train_outcomes, test_features){
+  fit5 = class::knn(
+    train = train_features,
+    test = test_features,
+    cl = train_outcomes,
+    k=5
+  )
+  return(fit5)
+}
+
+# SVM
+svm_pred = function(train_features, train_outcomes, test_features){
+  svm_res = e1071::svm(x = train_features, y = as.factor(train_outcomes))
+  classifier_prediction = predict(svm_res, data.frame(t(test_features)))
+  return(classifier_prediction)
+}
+
+# Trees
+tree_pred = function(train_features, train_outcomes, test_features){
+  df = data.frame(cbind(train_features, "Outcome" = train_outcomes))
+  rpart_res = rpart(Outcome ~ ., data = df)
+  prediction = predict(rpart_res, data.frame(t(test_features)))
+  classifier_prediction = colnames(prediction)[which(prediction == max(prediction))]
+  return(classifier_prediction)
+}
+
+
+# Ensembles of Trees
+rf_pred = function(train_features, train_outcomes, test_features){
+  rf_res = randomForest::randomForest(x = train_features, y = as.factor(train_outcomes))
+  classifier_prediction = predict(rf_res, test_features)
+  return(classifier_prediction)
 }
 
 
