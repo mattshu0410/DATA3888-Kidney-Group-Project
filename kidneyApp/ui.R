@@ -134,8 +134,11 @@ The core utility of our datasets is the similarity between the two. Uniformity b
                                           mainPanel(
                                                   tabsetPanel(type = "tabs",
                                                               tabPanel("knn", plotlyOutput("knn")),
-                                                              tabPanel("Summary",),
-                                                              tabPanel("Table",)
+                                                              tabPanel("log",plotlyOutput("log")),
+                                                              tabPanel("rf",plotlyOutput("rf")),
+                                                              tabPanel("svm",plotlyOutput("svm")),
+                                                              tabPanel("decisiontree",plotlyOutput("tree"))
+                                                              
                                                   )
                                                   
                                           )
