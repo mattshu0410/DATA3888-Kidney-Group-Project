@@ -52,59 +52,17 @@ shinyServer(function(input, output) {
     }
   })
   
-  
   mydata <- reactive({
     
-    # string file name
-    inFile <- input$target_upload
-    
-    
-    if (is.null(inFile))
-      return(NULL)
-    
-    # reading file
-    abc <- read.csv(inFile$datapath)
-    
-    
-    if(input$dis == "head") {
-      return(head(abc))
-    }
-    else {
-      return(abc)
-    }
-    
-    
-  })
-  
-  mydata1 <- reactive({
-    
-    # string file name
     File <- input$target_upload1
-    
-    if (is.null(File))
-      return(NULL)
-    
-    # reading file
     ab <- read.csv(File$datapath)
-    
-    
-    if(input$dis1 == "head") {
-      return(head(ab))
-    }
-    else {
-      return(ab)
-    }
-    
-    
-  })
-  # rendering table in File Upload page
-  output$abc = DT::renderDT({
-    mydata()
+    a<-get_pairwise_differences_probe_id(abmr_nonrej_features,ab)
+    return(a)
   })
   
-  output$ab = DT::renderDT({
-    mydata1()
-  })
+  output$pcaplot1 <-renderPlotly({
+    get_PCA_plot(abmr_nonrej_features,abmr_nonrej_outcome,mydata(),"ABMR","knn")
+  }) 
   
   
   output$sliders <- renderUI({
