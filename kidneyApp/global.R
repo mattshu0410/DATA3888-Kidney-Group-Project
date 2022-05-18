@@ -371,19 +371,10 @@ plot_cpop(cpop_result = cpop_result, type = "ggraph")
 #test_case = read.csv('example_gene_input.csv')
 #colnames(test_case) = c('probe_id', 'expr')
 
-# Input row of two gene symbols to find difference
-# Output difference in relevant expressions in test_case
-difference_from_pair = function(x){
-  from = AFFX_gene_symbols$ID[AFFX_gene_symbols$`Gene Symbol` == x[1]]
-  to = AFFX_gene_symbols$ID[AFFX_gene_symbols$`Gene Symbol` == x[2]]
-  print(from)
-  print(to)
-  return(test_case$expr[test_case$probe_id == from] - test_case$expr[test_case$probe_id == to])
-}
-
 # Input feature names df from CPOP, test_case with probe ID & expression
 # Output feature vector of relevant pairwise differences
-get_pairwise_differences = function(features, test_case){
+get_pairwise_differences_probe_id = function(features, test_case_probe_id){
+  colnames(test_case_probe_id) = c('probe_id', 'expr')
   
   feature_names = data.frame(names(features)) %>%
     tidyr::separate(`names.features.`,c("from", "to"), "--")
@@ -391,19 +382,35 @@ get_pairwise_differences = function(features, test_case){
   
   feature_differences = feature_names %>%
     dplyr::select(from, to) %>%
-    apply(., 1, difference_from_pair)
+    apply(., 1, function(x){
+      from = AFFX_gene_symbols$ID[AFFX_gene_symbols$`Gene Symbol` == x[1]]
+      to = AFFX_gene_symbols$ID[AFFX_gene_symbols$`Gene Symbol` == x[2]]
+      return(test_case$expr[test_case$probe_id == from] - test_case$expr[test_case$probe_id == to])
+    })
   
   names(feature_differences) = names(features)
   
   return(feature_differences)
 }
 
-
-get_genes_for_sliders = function(features){
-  names(features) %>%
-    sapply(., function(x){str_split(x,'--')}) %>%
-    unlist() %>%
-    unique()
+# Input feature names df from CPOP, test_case with gene symbol & expression
+# Output feature vector of relevant pairwise differences
+get_pairwise_differences_gene_symbol = function(features, test_case_gene_symbol){
+  colnames(test_case_gene_symbol) = c('gene_symbol', 'expr')
+  
+  feature_names = data.frame(names(features)) %>%
+    tidyr::separate(`names.features.`,c("from", "to"), "--")
+  
+  feature_differences = feature_names %>%
+    dplyr::select(from, to) %>%
+    apply(., 1, function(x){
+      from = test_case_gene_symbol$expr[test_case_gene_symbol$gene_symbol == x[1]]
+      to = test_case_gene_symbol$expr[test_case_gene_symbol$gene_symbol == x[2]]
+      return(as.numeric(from)-as.numeric(to))
+    })
+  names(feature_differences) = colnames(features)
+  
+  return(feature_differences)
 }
 
 

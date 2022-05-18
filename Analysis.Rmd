@@ -1000,20 +1000,14 @@ Interpretability: https://christophm.github.io/interpretable-ml-book/scope-of-in
 AFFX_gene_symbols
 
 # Ingesting Test Case
-test_case = read.csv('example_gene_input.csv')
-colnames(test_case) = c('probe_id', 'expr')
+test_case_probe_id = read.csv('example_gene_input.csv')
 
-# Input row of two gene symbols to find difference
-# Output difference in relevant expressions in test_case
-difference_from_pair = function(x){
-  from = AFFX_gene_symbols$ID[AFFX_gene_symbols$`Gene Symbol` == x[1]]
-  to = AFFX_gene_symbols$ID[AFFX_gene_symbols$`Gene Symbol` == x[2]]
-  return(test_case$expr[test_case$probe_id == from] - test_case$expr[test_case$probe_id == to])
-}
+
 
 # Input feature names df from CPOP, test_case with probe ID & expression
 # Output feature vector of relevant pairwise differences
-get_pairwise_differences = function(features, test_case){
+get_pairwise_differences_probe_id = function(features, test_case_probe_id){
+  colnames(test_case_probe_id) = c('probe_id', 'expr')
   
   feature_names = data.frame(names(features)) %>%
     tidyr::separate(`names.features.`,c("from", "to"), "--")
@@ -1021,22 +1015,60 @@ get_pairwise_differences = function(features, test_case){
   
   feature_differences = feature_names %>%
     dplyr::select(from, to) %>%
-    apply(., 1, difference_from_pair)
+    apply(., 1, function(x){
+      from = AFFX_gene_symbols$ID[AFFX_gene_symbols$`Gene Symbol` == x[1]]
+      to = AFFX_gene_symbols$ID[AFFX_gene_symbols$`Gene Symbol` == x[2]]
+      return(test_case$expr[test_case$probe_id == from] - test_case$expr[test_case$probe_id == to])
+    })
   
   names(feature_differences) = names(features)
   
   return(feature_differences)
 }
 
+# Input feature names df from CPOP, test_case with gene symbol & expression
+# Output feature vector of relevant pairwise differences
+get_pairwise_differences_gene_symbol = function(features, test_case_gene_symbol){
+  colnames(test_case_gene_symbol) = c('gene_symbol', 'expr')
+  
+  feature_names = data.frame(names(features)) %>%
+    tidyr::separate(`names.features.`,c("from", "to"), "--")
+  
+  feature_differences = feature_names %>%
+    dplyr::select(from, to) %>%
+    apply(., 1, function(x){
+      from = test_case_gene_symbol$expr[test_case_gene_symbol$gene_symbol == x[1]]
+      to = test_case_gene_symbol$expr[test_case_gene_symbol$gene_symbol == x[2]]
+      return(as.numeric(from)-as.numeric(to))
+    })
+  names(feature_differences) = colnames(features)
+  
+  return(feature_differences)
+}
+
+
+
 
 ```
 
 ```{r}
 
+# For Probe ID inputs
+test_tcmr_nonrej = get_pairwise_differences_probe_id (tcmr_nonrej_features, test_case_probe_id)
+test_abmr_nonrej = get_pairwise_differences_probe_id (abmr_nonrej_features, test_case_probe_id)
+# For Gene Symbol inputs
+test_tcmr_nonrej = get_pairwise_differences_gene_symbol(tcmr_nonrej_features, example_slider_input)
+test_abmr_nonrej = get_pairwise_differences_gene_symbol(abmr_nonrej_features, example_slider_input)
 
-test_tcmr_nonrej = get_pairwise_differences(tcmr_nonrej_features)
-test_abmr_nonrej = get_pairwise_differences(abmr_nonrej_features)
-
+# Example TCMR input
+example_slider_input = as.data.frame(
+  cbind(c("APOBEC3G", "CD72", "C1orf162", "HAPLN3", "IDO1", 
+                          "SELPLG", "IRF1", "GBP5", "PSMB8", "LCP2", "TNFRSF1B", 
+                          "MYB", "TAP1" ,"TRIM69", "VAV1", "TNFRSF9", "CD8A", "LST1"),
+        c(9.80811398, 6.039011785, 5.810845604, 10.34278117, 3.211123348, 
+                   7.615630883, 5.473263969, 5.130847382, 5.967406954, 3.806599082, 
+                   6.459728547, 8.52547126, 6.155345118, 6.431330609, 6.973053399, 
+                   4.590544467, 5.997751859, 4.27406608)))
 ```
 
 ```{r}
@@ -1053,6 +1085,8 @@ get_genes_for_sliders = function(features){
 
 get_genes_for_sliders(tcmr_nonrej_features)
 get_genes_for_sliders(abmr_nonrej_features)
+
+
 
 ```
 
