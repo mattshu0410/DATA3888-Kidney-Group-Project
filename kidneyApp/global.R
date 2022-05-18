@@ -29,7 +29,7 @@ library(DT)
 ################################## HANDLING GSE36059 DATASET ##################################
 
 # Reading in Data
-GEO_GSE36059 = getGEO("GSE36059")
+#GEO_GSE36059 = getGEO("GSE36059")
 GSE36059 = GEO_GSE36059$GSE36059_series_matrix.txt.gz
 
 # Load relevant matrices
@@ -68,7 +68,7 @@ rownames(eMat_GSE36059) = lapply(strsplit(kept_gene_symbols, ' /// ', 1), `[`, 1
 
 ################################## HANDLING GSE48581 DATSET ##################################
 
-GEO_GSE48581 = getGEO("GSE48581")
+#GEO_GSE48581 = getGEO("GSE48581")
 GSE48581 = GEO_GSE48581$GSE48581_series_matrix.txt.gz
 
 # Load relevant matrices
@@ -367,6 +367,10 @@ plot_cpop(cpop_result = cpop_result, type = "ggraph")
 
 ################################## Model Prediction ##################################
 
+# How to Ingest a Test Case
+#test_case = read.csv('example_gene_input.csv')
+#colnames(test_case) = c('probe_id', 'expr')
+
 # Input row of two gene symbols to find difference
 # Output difference in relevant expressions in test_case
 difference_from_pair = function(x){
@@ -384,15 +388,196 @@ get_pairwise_differences = function(features, test_case){
   feature_names = data.frame(names(features)) %>%
     tidyr::separate(`names.features.`,c("from", "to"), "--")
   
-  feature_names %>%
+  
+  feature_differences = feature_names %>%
     dplyr::select(from, to) %>%
     apply(., 1, difference_from_pair)
+  
+  names(feature_differences) = names(features)
+  
+  return(feature_differences)
 }
+
 
 get_genes_for_sliders = function(features){
   names(features) %>%
     sapply(., function(x){str_split(x,'--')}) %>%
     unlist() %>%
     unique()
+}
+
+
+
+# Input CPOP pairwise feature matrix, outcome vector, test features, classifier prediction, class ("ABMR" or "TCMR")
+# Output ggplotly object
+# class_model = {"log", "svm", "tree", "rf", "knn"}
+
+get_PCA_plot = function(train_features, train_outcomes, test_features, positive_class, class_model) {
+  
+  # New x projections on rotated set of axes
+  pca_df = prcomp(train_features, retx = TRUE)
+  # Get variance explained by PC1
+  PC1_var = round(summary(pca_df)$importance[2] * 100, 2)
+  # Get variance explained by PC2
+  PC2_var = round(summary(pca_df)$importance[5] * 100, 2)
+  # Get PCA of test features
+  PCA_pred = predict(pca_df, t(test_features))
+  
+  # Get classifier prediction
+  # Calling function using class_model variable name
+  classifier_prediction = do.call(paste(class_model, "_pred", sep=''), list(train_features, train_outcomes, test_features))
+  
+  
+  # Proper names for classifiers
+  classifier_names = as.data.frame(matrix(
+    c("log", "svm", "tree", "rf", "knn", "by Logistic Regression",
+      "by Simple Vector Machine", "by Tree", "by Random Forest", "by KNN"),
+    ncol = 2, byrow=FALSE))
+  
+  classifier_name = classifier_names$V2[classifier_names$V1 == class_model]
+  
+  
+  # Create plot dataframe with test patient
+  Outcome = c(paste("Predicted as", as.character(classifier_prediction), classifier_name))
+  PCA_pred_classified = cbind(PCA_pred, Outcome)
+  pca_plot_df = data.frame(pca_df$x) %>%
+    cbind("Outcome" = train_outcomes) %>%
+    rbind(., "Test_Patient" = PCA_pred_classified)
+  
+  
+  # Custom color palette
+  rej_healthy_col = c("#4daf4a", "#E41A1C", "#377eb8")
+  names(rej_healthy_col) = c("NR", positive_class, paste("Predicted as", as.character(classifier_prediction), classifier_name))
+  
+  # Create PCA plot with annotated prediction from classifier
+  p = ggplot(pca_plot_df,
+             aes(x=as.numeric(PC1),
+                 y=as.numeric(PC2),
+                 color=Outcome
+             )) +
+    geom_point(alpha=0.7) +
+    scale_color_manual(values = rej_healthy_col) +
+    theme_bw() +
+    labs(title = paste("PCA of Pairwise Gene Expression by Kidney Graft Outcome (", positive_class, "vs No Rejection )"), 
+         color = "Outcome",
+         x = paste("PC1", " (", PC1_var,"%)", sep=""),
+         y = paste("PC2", " (", PC2_var,"%)", sep=""))
+  
+  return(ggplotly(p))
+}
+
+
+# n: number of samples
+# cvK: fold number
+# n_sim: number of repeats
+
+cross_validation = function(n, cvK, n_sim, X, y){
+  
+  cv_rep_acc_log = cv_rep_acc_knn = cv_rep_acc_svm = cv_rep_acc_tree = cv_rep_acc_rf = c()
+  
+  for (i in 1:n_sim) {
+    cvSets =  cvTools::cvFolds(n, cvK)  # permute all the data, into 5 folds
+    cv_acc_log = cv_acc_knn = cv_acc_svm = cv_acc_tree = cv_acc_rf = c()
+    
+    for (j in 1:cvK) {
+      test_id = cvSets$subsets[cvSets$which == j]
+      X_test = X[test_id, ]
+      X_train = X[-test_id, ]
+      y_test = y[test_id]
+      y_train = y[-test_id]
+      
+      ## Binary Logistic
+      df = as.data.frame(cbind(X_train, "Outcome" = y_train))
+      log_reg = glm(Outcome ~ ., family = binomial(link = "logit"), data = df)
+      responses = predict(log_reg, X_test, type = "response")
+      preds = sapply(responses, function(x){
+        if (x <= 0.5) {
+          levels(df$Outcome)[1]
+        } else {
+          levels(df$Outcome)[2]
+        }
+      })
+      cv_acc_log[j] = mean(y_test == preds)
+      
+      ## KNN - 5 Nearest Neighbours
+      fit5 = class::knn(
+        train = X_train,
+        test = X_test,
+        cl = y_train,
+        k=5
+      )
+      cv_acc_knn[j] = mean(y_test == fit5)
+      
+      ## SVM
+      svm_res = e1071::svm(x = X_train, y = as.factor(y_train))
+      fit = predict(svm_res, X_test)
+      cv_acc_svm[j] = mean(y_test == fit)
+      
+      ## Trees
+      
+      #df = as.data.frame(cbind(X_train, "Outcome" = y_train))
+      rpart_res = rpart(Outcome ~ ., data = df)
+      prediction = predict(rpart_res, X_test)
+      levels = colnames(prediction)
+      preds = apply(prediction, 1, function(x){
+        levels[which(x == max(x))]
+      })
+      cv_acc_tree[j] = mean(y_test == preds)
+      
+      
+      #classifier_prediction = colnames(prediction)[which(prediction == max(prediction))]
+      #return(classifier_prediction)
+      
+      ## Random Forest
+      rf_res = randomForest::randomForest(x = X_train, y = as.factor(y_train))
+      fit = predict(rf_res, X_test)
+      cv_acc_rf[j] = mean(y_test == fit)
+      
+    }
+    cv_rep_acc_log = append(cv_rep_acc_log, mean(cv_acc_log))
+    cv_rep_acc_knn = append(cv_rep_acc_knn, mean(cv_acc_knn))
+    cv_rep_acc_svm = append(cv_rep_acc_svm, mean(cv_acc_svm))
+    cv_rep_acc_tree = append(cv_rep_acc_tree, mean(cv_acc_tree))
+    cv_rep_acc_rf = append(cv_rep_acc_rf, mean(cv_acc_rf))
+  }
+  return(cbind(cv_rep_acc_log, cv_rep_acc_knn, cv_rep_acc_svm, cv_rep_acc_tree, cv_rep_acc_rf))
+}
+
+# Calls cross-validation function and then plots results
+# cvK = 5
+# n_sim = 10
+# X = tcmr_nonrej_features
+# y = tcmr_nonrej_outcome
+# n = nrow(X)
+
+get_cross_val_plot = function(n, cvK, n_sim, X, y) {
+  
+  # Get cross validation accuracy
+  acc = cross_validation(n, cvK, n_sim, X, y)
+  acc = as.data.frame(acc)
+  
+  # Positive class either TCMR or ABMR
+  positive_class = levels(y)[2]
+  
+  # For pretty renaming
+  names(acc) = c("Logistic Regression", "k-Nearest-Neighbours", "Simple Vector Machine", "Tree", "Random Forest")
+  
+  # Producing boxplot
+  acc %>%
+    pivot_longer(cols = 1:5,
+                 names_to = "Classifier",
+                 values_to = "Accuracy") %>%
+    ggplot() +
+    aes(x = Classifier,
+        y = Accuracy) +
+    geom_boxplot() +
+    theme_bw() +
+    labs(
+      title = paste("Accuracy Comparison of Classifiers on Distinguishing", positive_class, "vs Non-Rejection"),
+      subtitle = "Repeated 5-fold Cross Validation (N=10)",
+      xlab = "Classifiers",
+      ylab = "Accuracy"
+    )
+  
 }
 
