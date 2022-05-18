@@ -623,7 +623,7 @@ get_cross_val_plot = function(n, cvK, n_sim, X, y) {
   names(acc) = c("Logistic Regression", "k-Nearest-Neighbours", "Simple Vector Machine", "Tree", "Random Forest")
   
   # Producing boxplot
-  acc %>%
+  p = acc %>%
     pivot_longer(cols = 1:5,
                  names_to = "Classifier",
                  values_to = "Accuracy") %>%
@@ -638,5 +638,5 @@ get_cross_val_plot = function(n, cvK, n_sim, X, y) {
       xlab = "Classifiers",
       ylab = "Accuracy"
     )
-  
+  return(ggplotly(p))
 }
