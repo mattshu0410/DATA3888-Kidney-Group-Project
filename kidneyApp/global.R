@@ -25,11 +25,14 @@ library(enrichplot)
 library(msigdbr)
 library(stringr)
 library(DT)
+library(rpart)
+library(randomForest)
 
 ################################## HANDLING GSE36059 DATASET ##################################
-
+Sys.setenv("VROOM_CONNECTION_SIZE" = 131072 * 5) 
+readr::local_edition(1)
 # Reading in Data
-#GEO_GSE36059 = getGEO("GSE36059")
+GEO_GSE36059 = getGEO("GSE36059")
 GSE36059 = GEO_GSE36059$GSE36059_series_matrix.txt.gz
 
 # Load relevant matrices
@@ -68,7 +71,7 @@ rownames(eMat_GSE36059) = lapply(strsplit(kept_gene_symbols, ' /// ', 1), `[`, 1
 
 ################################## HANDLING GSE48581 DATSET ##################################
 
-#GEO_GSE48581 = getGEO("GSE48581")
+GEO_GSE48581 = getGEO("GSE48581")
 GSE48581 = GEO_GSE48581$GSE48581_series_matrix.txt.gz
 
 # Load relevant matrices
@@ -161,10 +164,10 @@ get_average_FC = function(topTable1, topTable2, genes_selected) {
   FC_avg = (FC_1+FC_2)/2
   
   translated = bitr(rownames(FC_avg),
-                  fromType = "SYMBOL",
-                  toType = "ENTREZID",
-                  OrgDb = "org.Hs.eg.db"
-                  )
+                    fromType = "SYMBOL",
+                    toType = "ENTREZID",
+                    OrgDb = "org.Hs.eg.db"
+  )
   FC_ENTREZID = FC_avg %>%
     filter(rownames(FC_avg) %in% translated$SYMBOL)
   
@@ -183,10 +186,10 @@ get_single_FC = function(topTable, genes_selected) {
     filter(rownames(topTable) %in% genes_selected)
   
   translated = bitr(rownames(FC),
-                  fromType = "SYMBOL",
-                  toType = "ENTREZID",
-                  OrgDb = "org.Hs.eg.db"
-                  )
+                    fromType = "SYMBOL",
+                    toType = "ENTREZID",
+                    OrgDb = "org.Hs.eg.db"
+  )
   
   FC_ENTREZID = FC %>%
     filter(rownames(FC) %in% translated$SYMBOL)
@@ -241,7 +244,7 @@ make_network_plot = function(geneList){
                 cex_label_gene = 0.3,
                 colorEdge = TRUE,
                 cex_label_category = 0.5
-                )
+  )
   return(p1)
   
 }
@@ -271,11 +274,11 @@ make_treeplot = function(geneList){
   # ENTREZID to gene symbol 
   enrich_readable = setReadable(enrich, 'org.Hs.eg.db', 'ENTREZID')
   # Calculates pairwsie similarity using Jaccard's similarity index
-similiarity_enrich = pairwise_termsim(enrich_readable)
-# Tree plot where default agglomeration method uses ward.D
-p1 = treeplot(similiarity_enrich)
-return(p1)
-
+  similiarity_enrich = pairwise_termsim(enrich_readable)
+  # Tree plot where default agglomeration method uses ward.D
+  p1 = treeplot(similiarity_enrich)
+  return(p1)
+  
 }
 
 ################################## KEGGGGGGG ##################################
@@ -637,4 +640,3 @@ get_cross_val_plot = function(n, cvK, n_sim, X, y) {
     )
   
 }
-
