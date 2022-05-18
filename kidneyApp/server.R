@@ -59,9 +59,22 @@ shinyServer(function(input, output) {
     return(a)
   })
   
+# class_model = {"log", "svm", "tree", "rf", "knn"}
   output$knn <-renderPlotly({
     get_PCA_plot(abmr_nonrej_features,abmr_nonrej_outcome,mydata(),"ABMR","knn")
+  })
+  output$log<-renderPlotly({
+    get_PCA_plot(abmr_nonrej_features,abmr_nonrej_outcome,mydata(),"ABMR","log")
   }) 
+  output$svm<-renderPlotly({
+    get_PCA_plot(abmr_nonrej_features,abmr_nonrej_outcome,mydata(),"ABMR","svm")
+  })
+  output$tree<-renderPlotly({
+    get_PCA_plot(abmr_nonrej_features,abmr_nonrej_outcome,mydata(),"ABMR","tree")
+  })
+  output$rf<-renderPlotly({
+    get_PCA_plot(abmr_nonrej_features,abmr_nonrej_outcome,mydata(),"ABMR","rf")
+  })
   
   
   output$sliders <- renderUI({
