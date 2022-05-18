@@ -31,29 +31,11 @@ shinyServer(function(input, output) {
     make_treeplot(FC_TCMR_ENTREZID)
   }) 
   
-  observeEvent(input$showTab, {
-    
-    # select = TRUE immediately brings user to prediction page
-    insertTab(inputId = "tabs",
-              tabPanel("Prediction", position ="after"), select = TRUE)
-    shinyjs::hide("showTab")
-  })
-  
-  # hide the action button initially
-  observe({
-    shinyjs::hide("showTab")
-  })
-  
-  # if csv added, show action button
-  observeEvent(input$target_upload, {
-    current_data = mydata()
-    if (!is.null(current_data)) {
-      shinyjs::show("showTab")
-    }
-  })
   
   mydata <- reactive({
     File <- input$target_upload1
+    if (is.null(File))
+      return(NULL)
     ab <- read.csv(File$datapath)
     a<-get_pairwise_differences_probe_id(abmr_nonrej_features,ab)
     return(a)
@@ -76,6 +58,72 @@ shinyServer(function(input, output) {
     get_PCA_plot(abmr_nonrej_features,abmr_nonrej_outcome,mydata(),"ABMR","rf")
   })
   
+  output$knnr<-renderPlotly({
+    get_cross_val_plot(nrow(abmr_nonrej_features), 5, 10, abmr_nonrej_features, abmr_nonrej_outcome)
+  })
+  
+  output$logr<-renderPlotly({
+    get_cross_val_plot(nrow(abmr_nonrej_features), 5, 10, abmr_nonrej_features, abmr_nonrej_outcome)
+  })
+  
+  output$svmr<-renderPlotly({
+    get_cross_val_plot(nrow(abmr_nonrej_features), 5, 10, abmr_nonrej_features, abmr_nonrej_outcome)
+  })
+  
+  output$treer<-renderPlotly({
+    get_cross_val_plot(nrow(abmr_nonrej_features), 5, 10, abmr_nonrej_features, abmr_nonrej_outcome)
+  })
+  
+  output$rfr<-renderPlotly({
+    get_cross_val_plot(nrow(abmr_nonrej_features), 5, 10, abmr_nonrej_features, abmr_nonrej_outcome)
+  })
+  
+  mydata1<- reactive({
+    File <- input$target_upload
+    if (is.null(File))
+      return(NULL)
+    abc <- read.csv(File$datapath)
+    d<-get_pairwise_differences_probe_id(tcmr_nonrej_features,abc)
+    return(d)
+  })
+
+  # class_model = {"log", "svm", "tree", "rf", "knn"}
+  output$knn1 <-renderPlotly({
+    get_PCA_plot(tcmr_nonrej_features,tcmr_nonrej_outcome,mydata1(),"TCMR","knn")
+  })
+  output$log1<-renderPlotly({
+    get_PCA_plot(tcmr_nonrej_features,tcmr_nonrej_outcome,mydata1(),"TCMR","log")
+  }) 
+  output$svm1<-renderPlotly({
+    get_PCA_plot(tcmr_nonrej_features,tcmr_nonrej_outcome,mydata1(),"TCMR","svm")
+  })
+  output$tree1<-renderPlotly({
+    get_PCA_plot(tcmr_nonrej_features,tcmr_nonrej_outcome,mydata1(),"TCMR","tree")
+  })
+  output$rf1<-renderPlotly({
+    get_PCA_plot(tcmr_nonrej_features,tcmr_nonrej_outcome,mydata1(),"TCMR","rf")
+  })
+  
+  
+  output$knnr1<-renderPlotly({
+    get_cross_val_plot(nrow(tcmr_nonrej_features), 5, 10, tcmr_nonrej_features, tcmr_nonrej_outcome)
+  })
+  
+  output$logr1<-renderPlotly({
+    get_cross_val_plot(nrow(tcmr_nonrej_features), 5, 10, tcmr_nonrej_features, tcmr_nonrej_outcome)
+  })
+  
+  output$svmr1<-renderPlotly({
+    get_cross_val_plot(nrow(tcmr_nonrej_features), 5, 10, tcmr_nonrej_features, tcmr_nonrej_outcome)
+  })
+  
+  output$treer1<-renderPlotly({
+    get_cross_val_plot(nrow(tcmr_nonrej_features), 5, 10, tcmr_nonrej_features, tcmr_nonrej_outcome)
+  })
+  
+  output$rfr1<-renderPlotly({
+    get_cross_val_plot(nrow(tcmr_nonrej_features), 5, 10, tcmr_nonrej_features, tcmr_nonrej_outcome)
+  })
   
   output$sliders <- renderUI({
     a=get_genes_for_sliders(tcmr_nonrej_features)
