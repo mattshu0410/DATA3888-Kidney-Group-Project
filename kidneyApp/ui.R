@@ -129,15 +129,14 @@ The core utility of our datasets is the similarity between the two. Uniformity b
                                                                     '.csv'
                                                             )),
                                                   tags$hr(),
-                                                  actionButton("showTab", "Show Prediction"),
                                           ),
                                           mainPanel(
                                                   tabsetPanel(type = "tabs",
-                                                              tabPanel("knn", plotlyOutput("knn")),
-                                                              tabPanel("log",plotlyOutput("log")),
-                                                              tabPanel("rf",plotlyOutput("rf")),
-                                                              tabPanel("svm",plotlyOutput("svm")),
-                                                              tabPanel("decisiontree",plotlyOutput("tree"))
+                                                              tabPanel("KNN", plotlyOutput("knn"),plotlyOutput("knnr")),
+                                                              tabPanel("Logistic Regression",plotlyOutput("log"),plotlyOutput("logr")),
+                                                              tabPanel("Random Forest",plotlyOutput("rf"),plotlyOutput("rfr")),
+                                                              tabPanel("Simple Vector Machine",plotlyOutput("svm"),plotlyOutput("svmr")),
+                                                              tabPanel("Decision Tree",plotlyOutput("tree"),plotlyOutput("treer"))
                                                               
                                                   )
                                                   
@@ -229,10 +228,16 @@ The core utility of our datasets is the similarity between the two. Uniformity b
                                               '.csv'
                                       )),
                             tags$hr(),
-                            actionButton("showTab", "Show Prediction"),
                                     ),
                             mainPanel(
-                                    #DTOutput("abc"),
+                                    tabsetPanel(type = "tabs",
+                                                tabPanel("KNN", plotlyOutput("knn1"),plotlyOutput("knnr1")),
+                                                tabPanel("Logistic Regression",plotlyOutput("log1"),plotlyOutput("logr1")),
+                                                tabPanel("Random Forest",plotlyOutput("rf1"),plotlyOutput("rfr1")),
+                                                tabPanel("Simple Vector Machine",plotlyOutput("svm1"),plotlyOutput("svmr1")),
+                                                tabPanel("Decision Tree",plotlyOutput("tree1"),plotlyOutput("treer1"))
+                                                
+                                    )
                                     
                             )
                             )
