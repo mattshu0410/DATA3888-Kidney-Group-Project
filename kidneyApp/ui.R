@@ -15,7 +15,17 @@ shinyUI(navbarPage(tags$head(
      useShinyjs(),
      
      tabPanel("Home",
+              h3("Introduction"),
+              p("Welcome to Kidney C1’s Shiny App! This app is a Kidney rejection risk calculation tool for clinical researchers that aims to increase our understanding of the influence of different genes on Kidney graft acceptance or rejection. The tool demonstrates the influence that different genes have on T-Cell mediated rejection and Antibody-Mediated rejection by providing a prediction model that quantifies the risk of an individual's kidney rejection given their gene profile. This model will provide clinical researchers with the tools necessary to improve kidney acceptance rates, and maximise the efficient allocation of Kidneys."),
+              br(),
+              h3("Why"),
+              p("Kidney rejection occurs within 10-15 patients per 100 transplants. Since more than 90,000 patients are in need of a kidney and only 20,000 kidney transplants occur each year, the utility of a kidney rejection risk calculator for clinical research is considerable ('Rejection of a transplanted kidney', 2022). It will provide advantageous information that will facilitate the efficient allocation of kidneys to patients and minimise the risk of rejection. With the goal of maximising the greater wellbeing of individuals in need of kidney transplants, this tool will provide advancements in knowledge for clinical researchers."),
+              br(),
+              h3("How to Use"),
+              p("ABMR and TCMR Analysis"),
+              p("Both the ‘Antibody-Mediated Rejection’ Analysis and ‘T-cell Mediated Rejection Analysis’ tabs have three different sections to navigate through."),
               
+              p("Overview"),
      ),
      
      tabPanel("ABMR Analysis", 
@@ -85,15 +95,10 @@ shinyUI(navbarPage(tags$head(
                                                                     '.csv'
                                                             )),
                                                   tags$hr(),
-                                                  radioButtons("dis1", "Display",
-                                                               choices = c(Head = "head",
-                                                                           All = "all"),
-                                                               selected = "head"),
-                                                  tags$hr(),
                                                   actionButton("showTab", "Show Prediction"),
                                           ),
                                           mainPanel(
-                                                  DTOutput("ab"),
+                                                  plotlyOutput("pcaplot1"),
                                                   
                                           )
                                   )
@@ -172,15 +177,10 @@ shinyUI(navbarPage(tags$head(
                                               '.csv'
                                       )),
                             tags$hr(),
-                            radioButtons("dis", "Display",
-                                         choices = c(Head = "head",
-                                                     All = "all"),
-                                         selected = "head"),
-                            tags$hr(),
                             actionButton("showTab", "Show Prediction"),
                                     ),
                             mainPanel(
-                                    DTOutput("abc"),
+                                    #DTOutput("abc"),
                                     
                             )
                             )
