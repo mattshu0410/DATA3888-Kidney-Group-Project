@@ -17,6 +17,7 @@ library(devtools)
 library(ggplot2)
 library(stringr)
 library(stringdist)
+library(BiocManager)
 library(GEOquery) 
 library(R.utils)
 library(Biobase)
@@ -33,13 +34,14 @@ library(clusterProfiler)
 library(DOSE)
 library(org.Hs.eg.db)
 library(pathview)
-library(enrichplot)
-library(msigdbr)
 library(stringr)
 library(gtools)
 library(rpart)
-library(caret)
+library(yardstick)
+library(enrichplot)
+library(msigdbr)
 #BiocManager::install("sva")
+
 ```
 
 ## Inspiration / Overall Focus
@@ -353,7 +355,7 @@ FC_ABMR_ENTREZID = get_average_FC(tT_ABMR_48581, tT_ABMR_36059, genes_selected_A
 FC_TCMR_ENTREZID = get_average_FC(tT_TCMR_48581, tT_TCMR_36059, genes_selected_TCMR)
 
 # Alternatively, get log fold changes of a single dataset
-FC_ABMR_ENTREZID = get_single_FC(tT_ABMR_48581, genes_selected_ABMR)
+#FC_ABMR_ENTREZID = get_single_FC(tT_ABMR_48581, genes_selected_ABMR)
 
 
 ```
@@ -490,19 +492,21 @@ get_KEGG_plot = function(geneList){
 ```{r}
 # Saves in local folder
 get_KEGG_plot(FC_TCMR_ENTREZID)
+
 ```
 
 #### Using the Plot Functions
 
 ```{r}
 
-
+library(enrichplot)
 make_network_plot(FC_ABMR_ENTREZID)
 make_network_plot(FC_TCMR_ENTREZID)
 make_dotplot(FC_ABMR_ENTREZID)
 make_dotplot(FC_TCMR_ENTREZID)
 make_treeplot(FC_ABMR_ENTREZID)
 make_treeplot(FC_TCMR_ENTREZID)
+
 
 ```
 
@@ -567,7 +571,7 @@ get_cpop_result = function(exp_matrix1, exp_matrix2, pdata1, pdata2, genes_selec
 abmr_cpop_results = get_cpop_result(eMat_GSE48581, eMat_GSE36059, p_GSE48581, p_GSE36059, genes_selected_ABMR, "ABMR")
  cpop_result = abmr_cpop_results$cpop_result
 abmr_nonrej_features = abmr_cpop_results$features
-abmr_nonrej_outcome = abmr_cpop_results$outcome
+abmr_nonrej_outcome = factor(abmr_cpop_results$outcome, levels = c("NR", "ABMR"))
 
 # Plot network plot of stable pairwise gene ratios
 plot_cpop(cpop_result = cpop_result, type = "ggraph")
@@ -582,7 +586,7 @@ plot_cpop(cpop_result = cpop_result, type = "ggraph")
 tcmr_cpop_results = get_cpop_result(eMat_GSE48581, eMat_GSE36059, p_GSE48581, p_GSE36059, genes_selected_TCMR, "TCMR")
  cpop_result = tcmr_cpop_results$cpop_result
 tcmr_nonrej_features = tcmr_cpop_results$features
-tcmr_nonrej_outcome = tcmr_cpop_results$outcome
+tcmr_nonrej_outcome = factor(tcmr_cpop_results$outcome, levels = c("NR", "TCMR"))
 
 # Plot network plot of stable pairwise gene ratios
 plot_cpop(cpop_result = cpop_result, type = "ggraph")
@@ -684,7 +688,7 @@ get_PCA_plot = function(train_features, train_outcomes, test_features, positive_
   # Proper names for classifiers
   classifier_names = as.data.frame(matrix(
     c("log", "svm", "tree", "rf", "knn", "by Logistic Regression",
-      "by Simple Vector Machine", "by Tree", "by Random Forest", "by KNN"),
+      "by Simple Vector Machine", "by Decision Tree", "by Random Forest", "by KNN"),
     ncol = 2, byrow=FALSE))
   
   classifier_name = classifier_names$V2[classifier_names$V1 == class_model]
@@ -720,7 +724,7 @@ get_PCA_plot = function(train_features, train_outcomes, test_features, positive_
 }
 
 # Example of using the get_PCA_plot function
-# You may pass any of the following as class_model = {"log", "svm", "tree", "rf", "knn"}
+# You may pass any of the following as class_model = {"log", "svm", "rpart", "rf", "knn"}
 # It will use the respective model to make a prediction on the test data and plot it on the PCA graph
 get_PCA_plot(tcmr_nonrej_features, tcmr_nonrej_outcome, test_tcmr_nonrej, "TCMR", "log")
 get_PCA_plot(abmr_nonrej_features, abmr_nonrej_outcome, test_abmr_nonrej, "ABMR", "knn")
@@ -876,58 +880,63 @@ Getting all the class probabilities in a matrix. In preparation for an PR-AUC cu
 
 ```{r}
 
-get_cv_class_probs = function(n, cvK, X, y){
+get_cv_class_probs = function(n, cvK, nsim, X, y){
+  
+  # Set positive class "TCMR" or "ABMR"
+  positive_class = levels(y)[2]
   
   preds_df = data.frame()
+  for (i in 1:nsim) {
+    # Permute all the data, into 5 folds
+    cvSets =  cvTools::cvFolds(n, cvK)  
+    
+    for (j in 1:cvK) {
+      
+      test_id = cvSets$subsets[cvSets$which == j]
+      X_test = X[test_id, ]
+      X_train = X[-test_id, ]
+      y_test = y[test_id]
+      y_train = y[-test_id]
+      
+      # For classifiers that require a dataframe
+      df = as.data.frame(cbind(X_train, "Outcome" = y_train))
+      
+      
+      # Logistic Regression
+      log_reg = glm(Outcome ~ ., family = binomial(link = "logit"), data = df)
+      log_responses = predict(log_reg, X_test, type = "response")
+      
+      # KNN
+      knn5 = caret::knn3Train(X_train, X_test, as.factor(y_train), k=5, prob = TRUE)
+      knn5_responses = attr(knn5,"prob")[,positive_class]
   
-  # Permute all the data, into 5 folds
-  cvSets =  cvTools::cvFolds(n, cvK)  
-  
-  for (j in 1:cvK) {
-    
-    test_id = cvSets$subsets[cvSets$which == j]
-    X_test = X[test_id, ]
-    X_train = X[-test_id, ]
-    y_test = y[test_id]
-    y_train = y[-test_id]
-    
-    # For classifiers that require a dataframe
-    df = as.data.frame(cbind(X_train, "Outcome" = y_train))
-    
-    
-    # Logistic Regression
-    log_reg = glm(Outcome ~ ., family = binomial(link = "logit"), data = df)
-    log_responses = predict(log_reg, X_test, type = "response")
-    
-    # KNN
-    knn5 = caret::knn3Train(X_train, X_test, as.factor(y_train), k=5, prob = TRUE)
-    knn5_responses = attr(knn5,"prob")[,'TCMR']
-
-    # SVM
-    svm_res = e1071::svm(x = X_train, y = as.factor(y_train), probability=TRUE)
-    svm_preds = predict(svm_res, X_test, probability=TRUE)
-    svm_responses = attr(svm_preds, "probabilities")[,"TCMR"]
-    
-    # Tree
-    rpart_res = rpart(Outcome ~ ., data = df)
-    rpart_preds = predict(rpart_res, X_test)
-    rpart_responses = rpart_preds[,"TCMR"]
-    
-    # Random Forest
-    rf_res = randomForest::randomForest(x = X_train, y = as.factor(y_train), keep.forest=TRUE)
-    rf_preds = predict(rf_res, X_test, type="prob")
-    rf_responses = rf_preds[,"TCMR"]
-    
-    matrix = cbind("patient_id" = rownames(X_test), 
-                   "truth" = as.factor(y_test), 
-                   "fold_id" = rep(j, length(y_test)), 
-                   "log" = log_responses,
-                   "knn" = knn5_responses,
-                   "svm" = svm_responses,
-                   "rpart" = rpart_responses,
-                   "rf" = rf_responses)
-    
-    preds_df = rbind(preds_df, matrix)
+      # SVM
+      svm_res = e1071::svm(x = X_train, y = as.factor(y_train), probability=TRUE)
+      svm_preds = predict(svm_res, X_test, probability=TRUE)
+      svm_responses = attr(svm_preds, "probabilities")[,positive_class]
+      
+      # Tree
+      rpart_res = rpart(Outcome ~ ., data = df)
+      rpart_preds = predict(rpart_res, X_test)
+      rpart_responses = rpart_preds[,positive_class]
+      
+      # Random Forest
+      rf_res = randomForest::randomForest(x = X_train, y = as.factor(y_train), keep.forest=TRUE)
+      rf_preds = predict(rf_res, X_test, type="prob")
+      rf_responses = rf_preds[,positive_class]
+      
+      matrix = cbind("patient_id" = rownames(X_test), 
+                     "nsim" = rep(i, length(y_test)),
+                     "fold_id" = rep(j, length(y_test)),
+                     "truth" = as.factor(y_test),
+                     "log" = log_responses,
+                     "knn" = knn5_responses,
+                     "svm" = svm_responses,
+                     "rpart" = rpart_responses,
+                     "rf" = rf_responses)
+      
+      preds_df = rbind(preds_df, matrix)
+    }
   }
   return(preds_df)
 }
@@ -935,18 +944,96 @@ get_cv_class_probs = function(n, cvK, X, y){
 ```
 
 ```{r}
-cv_class_probs = get_cv_class_probs (n, cvK, X, y)
 
-cv_class_probs %>% 
-  group_by(patient_id) %>%
-  summarise(truth = max(as.integer(truth)),
-            LogisticRegression = mean(as.double(log)),
-            KNN = mean(as.double(knn)),
-            SVM = mean(as.double(svm)),
-            RPart = mean(as.double(rpart)),
-            RandomForest = mean(as.double(rf)))
 
-cv_class_probs %>% arrange(patient_id)
+
+# X is train features
+# y is train outcomes
+# cvK is number of folds
+# nsim is repeats
+
+get_pr_plot = function(cvK, nsim, X, y){
+  
+  n = nrow(X)
+  
+  # Set positive class "TCMR" or "ABMR"
+  positive_class = levels(y)[2]
+  
+  # Get repeated, cross-validated class probabilities of positive class
+  cv_class_probs = get_cv_class_probs (n, cvK, nsim, X, y)
+  
+  # Get mean probabilities of different classifiers
+  mean_class_probs = cv_class_probs %>% 
+    group_by(patient_id) %>%
+    summarise(truth = as.factor(max(as.integer(truth))),
+              LogisticRegression = mean(as.double(log)),
+              KNN = mean(as.double(knn)),
+              SVM = mean(as.double(svm)),
+              DecisionTree = mean(as.double(rpart)),
+              RandomForest = mean(as.double(rf)))
+  
+  # Restructuring for use with yardstick pr_curve function
+  mean_class_probs_long = mean_class_probs %>%
+    dplyr::select(-patient_id) %>%
+    pivot_longer(
+      cols = 2:6,
+      names_to = "Classifier",
+      values_to = "Probability"
+    )
+  
+  # Generate PR curve
+  precision_recall_curve = mean_class_probs_long %>%
+    group_by(Classifier) %>%
+    pr_curve(
+           truth = truth,
+           Probability,
+           event_level = "second"
+           ) %>%
+    ggplot() +
+    aes(x = recall,
+        y = precision,
+        color = Classifier) +
+    geom_path() +
+    coord_equal() +
+    theme_bw() +
+    labs(
+      title = paste("PR Comparison of Different Classifiers for", positive_class),
+      subtitle = "Repeated 5-fold Cross Validation (N=10)",
+      x = "Recall",
+      y = "Precision"
+    )
+  
+  pr_auc = mean_class_probs_long %>%
+    group_by(Classifier) %>%
+    pr_auc(truth, Probability)
+  
+  return(list("pr_curve" = precision_recall_curve, "pr_auc" = pr_auc))
+}
+
+
+  
+```
+
+```{r}
+
+# Get Precision Recall Curves
+
+pr_tcmr = get_pr_plot(cvK = 5,
+                      nsim = 10,
+                      X = tcmr_nonrej_features,
+                      y = tcmr_nonrej_outcome)
+pr_tcmr$pr_curve
+pr_tcmr$pr_auc
+
+
+pr_abmr = get_pr_plot(cvK = 5,
+                      nsim = 10,
+                      X = abmr_nonrej_features,
+                      y = abmr_nonrej_outcome)
+
+pr_abmr$pr_curve
+pr_abmr$pr_auc
+
 ```
 
 We can use an ensemble of different classifiers and take the median probability to generate a more stable prediction. Stability of your model/process is particularly important.

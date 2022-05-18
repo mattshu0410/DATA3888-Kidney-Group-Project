@@ -352,7 +352,7 @@ get_cpop_result = function(exp_matrix1, exp_matrix2, pdata1, pdata2, genes_selec
 abmr_cpop_results = get_cpop_result(eMat_GSE48581, eMat_GSE36059, p_GSE48581, p_GSE36059, genes_selected_ABMR, "ABMR")
 cpop_result = abmr_cpop_results$cpop_result
 abmr_nonrej_features = abmr_cpop_results$features
-abmr_nonrej_outcome = abmr_cpop_results$outcome
+abmr_nonrej_outcome = factor(abmr_cpop_results$outcome, levels = c("NR", "ABMR"))
 
 plot_cpop(cpop_result = cpop_result, type = "ggraph")
 
@@ -361,7 +361,7 @@ plot_cpop(cpop_result = cpop_result, type = "ggraph")
 tcmr_cpop_results = get_cpop_result(eMat_GSE48581, eMat_GSE36059, p_GSE48581, p_GSE36059, genes_selected_TCMR, "TCMR")
 cpop_result = tcmr_cpop_results$cpop_result
 tcmr_nonrej_features = tcmr_cpop_results$features
-tcmr_nonrej_outcome = tcmr_cpop_results$outcome
+tcmr_nonrej_outcome = factor(tcmr_cpop_results$outcome, levels = c("NR", "TCMR"))
 
 plot_cpop(cpop_result = cpop_result, type = "ggraph")
 
