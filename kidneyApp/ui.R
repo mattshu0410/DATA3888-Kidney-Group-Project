@@ -146,6 +146,24 @@ The core utility of our datasets is the similarity between the two. Uniformity b
                           ),
                           tabPanel(
                                   title="Manual Input",
+                                  sidebarLayout(
+                                          
+                                          sidebarPanel(
+                                                  uiOutput("mysliders1"),
+                                          ),
+                                          
+                                          mainPanel(
+                                                  tabsetPanel(type = "tabs",
+                                                              tabPanel("KNN", plotlyOutput("knn3")),
+                                                              tabPanel("Logistic Regression",plotlyOutput("log3")),
+                                                              tabPanel("Random Forest",plotlyOutput("rf3")),
+                                                              tabPanel("Simple Vector Machine",plotlyOutput("svm3")),
+                                                              tabPanel("Decision Tree",plotlyOutput("tree3"))
+                                                              
+                                                  )
+                                                  
+                                          )
+                                  )
                           )
                           
               )
@@ -249,14 +267,18 @@ The core utility of our datasets is the similarity between the two. Uniformity b
                           sidebarLayout(
                                   
                                   sidebarPanel(
-                                          uiOutput("sliders"),
+                                          uiOutput("mysliders"),
                                   ),
                                   
-                                  # Main panel for displaying outputs ----
                                   mainPanel(
-                                          
-                                          # Output: Table summarizing the values entered ----
-                                          tableOutput("values"),
+                                          tabsetPanel(type = "tabs",
+                                                      tabPanel("KNN", plotlyOutput("knn2")),
+                                                      tabPanel("Logistic Regression",plotlyOutput("log2")),
+                                                      tabPanel("Random Forest",plotlyOutput("rf2")),
+                                                      tabPanel("Simple Vector Machine",plotlyOutput("svm2")),
+                                                      tabPanel("Decision Tree",plotlyOutput("tree2"))
+                                                      
+                                          )
                                           
                                   )
                           )
