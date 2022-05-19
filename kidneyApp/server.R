@@ -143,7 +143,16 @@ shinyServer(function(input, output) {
   
   })
   
-  output$sliders <- renderUI({
+  # mydata1<- reactive({
+  #   File <- input$target_upload
+  #   if (is.null(File))
+  #     return(NULL)
+  #   abc <- read.csv(File$datapath)
+  #   d<-get_pairwise_differences_probe_id(tcmr_nonrej_features,abc)
+  #   return(d)
+  # })
+  
+  output$mysliders <- renderUI({
     a=get_genes_for_sliders(tcmr_nonrej_features)
     sliders <- lapply(1:length(a), function(i) {
       inputName <- a[i]
@@ -153,4 +162,23 @@ shinyServer(function(input, output) {
   })
   
   
+  mydata3<- reactive({
+    d=c()
+    e=c()
+    a=get_genes_for_sliders(tcmr_nonrej_features)
+    for(i in 1:length(a)){
+      d=c(d,a[i])
+      e=c(e,input$a[i])
+    }
+    data3 <-data.frame(Column1 = d,column2=e)
+    # w<-str(data3)
+    # return(w)
+    m<-get_pairwise_differences_probe_id(tcmr_nonrej_features,data3)
+    return(m)
+  })
+
+  # output$result <- renderPrint(str(mydata3()))
+  output$knn2 <-renderPlotly({
+    get_PCA_plot(tcmr_nonrej_features,tcmr_nonrej_outcome,mydata3(),"TCMR","knn")
+  })
 })
