@@ -119,7 +119,7 @@ p_GSE36059 = dplyr::rename(pData(GSE36059), diagnosis = `diagnosis:ch1`)
 p_GSE36059$diagnosis = gsub("non-rejecting", "NR", p_GSE36059$diagnosis)
 
 # Rows & patient id with control diagnosis of nephrectomy
-control_idx = which(p_GSE36059$diagnosis == "nephrectomy")
+control_idx = which(p_GSE36059$diagnosis == "Nephrectomy" | p_GSE36059$diagnosis == "MIXED")
 remove_patient_id = rownames(p_GSE36059)[control_idx]
 
 # Remove controls from patient and expression dataset
@@ -867,14 +867,7 @@ get_cross_val_plot(n, cvK, n_sim, X, y)
 
 ```
 
-```{r}
-tcmr_nonrej_outcome
-tcmr_nonrej_features
-svm_res = e1071::svm(x = tcmr_nonrej_features, y = as.factor(tcmr_nonrej_outcome))
-      fit = predict(svm_res, X_test)
-      cv_acc_svm[j] = mean(y_test == fit)
-
-```
+### Precision Recall Curve
 
 Getting all the class probabilities in a matrix. In preparation for an PR-AUC curve.
 
@@ -1034,6 +1027,127 @@ pr_abmr = get_pr_plot(cvK = 5,
 pr_abmr$pr_curve
 pr_abmr$pr_auc
 
+```
+
+### Subsetting for Stability of Feature Selection
+
+```{r}
+
+
+# Input two expression matrices, two patient data, proportion of data to sample
+# Output ABMR and TCMR features -> CPOP features
+get_subsetted_features = function(eMat1, eMat2, p1, p2, split_prop){
+  
+  # Stratification of Dataset so there is TCMR, ABMR, NR present in same proportions as original
+  p1_positive_TCMR = p1[which(p1$diagnosis == "TCMR"),]
+  p1_positive_ABMR = p1[which(p1$diagnosis == "ABMR"),]
+  p1_negative = p1[which(p1$diagnosis == "NR"),]
+  
+  p2_positive_TCMR = p2[which(p2$diagnosis == "TCMR"),]
+  p2_positive_ABMR = p2[which(p2$diagnosis == "ABMR"),]
+  p2_negative = p2[which(p2$diagnosis == "NR"),]
+  
+  # Random sampling of subset of dataset (pData and expression matrix)
+  rand_p1_positive_TCMR = slice_sample(p1_positive_TCMR, prop = split_prop)
+  rand_p1_positive_ABMR = slice_sample(p1_positive_ABMR, prop = split_prop)
+  rand_p1_negative = slice_sample(p1_negative, prop = split_prop)
+  p1_combined = rbind(rand_p1_positive_TCMR, rand_p1_positive_ABMR, rand_p1_negative)
+  eMat1_combined = eMat1[, rownames(p1_combined)]
+  
+  
+  rand_p2_positive_TCMR = slice_sample(p2_positive_TCMR, prop = split_prop)
+  rand_p2_positive_ABMR = slice_sample(p2_positive_ABMR, prop = split_prop)
+  rand_p2_negative = slice_sample(p2_negative, prop = split_prop)
+  p2_combined = rbind(rand_p2_positive_TCMR, rand_p2_positive_ABMR, rand_p2_negative)
+  eMat2_combined = eMat2[, rownames(p2_combined)]
+  
+  # Finding DE genes and taking intersection between two subsets
+  sig_genes_1_TCMR = get_ORA_genes(p1_combined, eMat1_combined)$tT_TCMR
+  sig_genes_2_TCMR = get_ORA_genes(p2_combined, eMat2_combined)$tT_TCMR
+  
+  sig_genes_1_ABMR = get_ORA_genes(p1_combined, eMat1_combined)$tT_ABMR
+  sig_genes_2_ABMR = get_ORA_genes(p2_combined, eMat2_combined)$tT_ABMR
+  
+  
+  # Find intersection of genes
+  sig_genes_TCMR = intersect(rownames(sig_genes_1_TCMR), rownames(sig_genes_2_TCMR))
+  sig_genes_ABMR = intersect(rownames(sig_genes_1_ABMR), rownames(sig_genes_2_ABMR))
+  
+  # Apply CPOP on subsets
+  abmr_cpop_results = get_cpop_result(eMat1_combined, eMat2_combined, p1_combined, p2_combined,   sig_genes_ABMR, "ABMR")
+  tcmr_cpop_results = get_cpop_result(eMat1_combined, eMat2_combined, p1_combined, p2_combined,   sig_genes_TCMR, "TCMR")
+  
+  cpop_result_abmr = abmr_cpop_results$cpop_result
+  cpop_result_tcmr = tcmr_cpop_results$cpop_result
+  
+  return(list("ABMR" = cpop_result_abmr$feature, "TCMR" = cpop_result_tcmr$feature))
+}
+
+```
+
+
+```{r}
+
+v1 = c("CDH5--MMRN2",    "CXCL9--IL15RA",  "HLA-A--IL1B",    "HLA-DRB1--SOST", "IRF1--VWF",      "KLF4--NOS3",    
+  "MALL--NKG7",     "APOL1--HYAL2",   "C1orf162--VWF",  "CRHBP--HYAL2",   "ESM1--GNG11",    "FCN3--PSMB8",   
+  "GBP4--HLA-DMB",  "HCK--HLA-F",     "HCP5--HLA-C",    "IDO1--KLRB1"   )
+print(v1)
+v2 = c("CDH5--MMRN2",       "CFP--KLRB1",        "CXCL10--VAMP5",     "LYN--TCRDV2",       "VEGFC--VWF",       
+       "ACSL5--CXCL9",      "C1orf162--VEGFC",   "CFP--TM4SF18",      "ECSCR--IL15",       "GBP4--HLA-DMB",    
+       "HLA-DQB1--RARRES3", "HLA-DRA--TRDV3",    "IL15RA--PSMB8",     "KLRD1--LST1"   )
+get_jaccard(v1,v2)
+
+
+get_jaccard = function(v1, v2) {
+    intersect_length = length(intersect(v1, v2))
+    union_length = length(union(v1, v2))
+    jaccard_index = intersect_length/union_length
+    print(jaccard_index)
+    return (jaccard_index)
+}
+
+ABMR_features = list()
+TCMR_features = list()
+
+for (i in 1:5) {
+  subsetted_features = get_subsetted_features (eMat1 = eMat_GSE36059, 
+                                               eMat2 = eMat_GSE48581, 
+                                               p1 = p_GSE36059, 
+                                               p2 = p_GSE48581,
+                                               split_prop = 0.95)
+  
+  
+  ABMR_features[i] = subsetted_features[1]
+  TCMR_features[i] = subsetted_features[2]
+  
+}
+
+jaccard_indexes = c()
+
+for (i in 1:length(ABMR_features)){
+  for (j in i+1:length(ABMR_features)){
+    #print(i)
+    #print(j)
+    print(ABMR_features[i])
+    print(ABMR_features[j])
+    jaccard_index = get_jaccard(ABMR_features[i], ABMR_features[j])
+    print(as.character(jaccard_index))
+    append(jaccard_indexes, jaccard_index)
+  }
+}
+
+#for (i in 2:4){
+#  print(i)
+#}
+#
+#jaccard_indexes
+#
+#
+#ABMR_features
+#TCMR_features
+#
+#sum(p1$diagnosis == 'TCMR')
+#sum(p2$diagnosis == 'TCMR')
 ```
 
 We can use an ensemble of different classifiers and take the median probability to generate a more stable prediction. Stability of your model/process is particularly important.
