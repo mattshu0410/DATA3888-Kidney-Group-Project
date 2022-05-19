@@ -41,41 +41,50 @@ shinyServer(function(input, output) {
     return(a)
   })
   
+  
+  output$mybutton <- renderUI({
+    if (is.null(mydata())) return(NULL)
+    actionButton("action", "Show Prediction")
+  })
+  
 # class_model = {"log", "svm", "tree", "rf", "knn"}
-  output$knn <-renderPlotly({
-    get_PCA_plot(abmr_nonrej_features,abmr_nonrej_outcome,mydata(),"ABMR","knn")
-  })
-  output$log<-renderPlotly({
-    get_PCA_plot(abmr_nonrej_features,abmr_nonrej_outcome,mydata(),"ABMR","log")
-  }) 
-  output$svm<-renderPlotly({
-    get_PCA_plot(abmr_nonrej_features,abmr_nonrej_outcome,mydata(),"ABMR","svm")
-  })
-  output$tree<-renderPlotly({
-    get_PCA_plot(abmr_nonrej_features,abmr_nonrej_outcome,mydata(),"ABMR","tree")
-  })
-  output$rf<-renderPlotly({
-    get_PCA_plot(abmr_nonrej_features,abmr_nonrej_outcome,mydata(),"ABMR","rf")
-  })
-  
-  output$knnr<-renderPlotly({
-    get_cross_val_plot(nrow(abmr_nonrej_features), 5, 10, abmr_nonrej_features, abmr_nonrej_outcome)
-  })
-  
-  output$logr<-renderPlotly({
-    get_cross_val_plot(nrow(abmr_nonrej_features), 5, 10, abmr_nonrej_features, abmr_nonrej_outcome)
-  })
-  
-  output$svmr<-renderPlotly({
-    get_cross_val_plot(nrow(abmr_nonrej_features), 5, 10, abmr_nonrej_features, abmr_nonrej_outcome)
-  })
-  
-  output$treer<-renderPlotly({
-    get_cross_val_plot(nrow(abmr_nonrej_features), 5, 10, abmr_nonrej_features, abmr_nonrej_outcome)
-  })
-  
-  output$rfr<-renderPlotly({
-    get_cross_val_plot(nrow(abmr_nonrej_features), 5, 10, abmr_nonrej_features, abmr_nonrej_outcome)
+  observeEvent(input$action, {
+    output$knn <-renderPlotly({
+      get_PCA_plot(abmr_nonrej_features,abmr_nonrej_outcome,mydata(),"ABMR","knn")
+    })
+    output$log<-renderPlotly({
+      get_PCA_plot(abmr_nonrej_features,abmr_nonrej_outcome,mydata(),"ABMR","log")
+    }) 
+    output$svm<-renderPlotly({
+      get_PCA_plot(abmr_nonrej_features,abmr_nonrej_outcome,mydata(),"ABMR","svm")
+    })
+    output$tree<-renderPlotly({
+      get_PCA_plot(abmr_nonrej_features,abmr_nonrej_outcome,mydata(),"ABMR","tree")
+    })
+    output$rf<-renderPlotly({
+      get_PCA_plot(abmr_nonrej_features,abmr_nonrej_outcome,mydata(),"ABMR","rf")
+    })
+    
+    output$knnr<-renderPlotly({
+      get_cross_val_plot(nrow(abmr_nonrej_features), 5, 10, abmr_nonrej_features, abmr_nonrej_outcome)
+    })
+    
+    output$logr<-renderPlotly({
+      get_cross_val_plot(nrow(abmr_nonrej_features), 5, 10, abmr_nonrej_features, abmr_nonrej_outcome)
+    })
+    
+    output$svmr<-renderPlotly({
+      get_cross_val_plot(nrow(abmr_nonrej_features), 5, 10, abmr_nonrej_features, abmr_nonrej_outcome)
+    })
+    
+    output$treer<-renderPlotly({
+      get_cross_val_plot(nrow(abmr_nonrej_features), 5, 10, abmr_nonrej_features, abmr_nonrej_outcome)
+    })
+    
+    output$rfr<-renderPlotly({
+      get_cross_val_plot(nrow(abmr_nonrej_features), 5, 10, abmr_nonrej_features, abmr_nonrej_outcome)
+    })
+    
   })
   
   mydata1<- reactive({
@@ -86,7 +95,14 @@ shinyServer(function(input, output) {
     d<-get_pairwise_differences_probe_id(tcmr_nonrej_features,abc)
     return(d)
   })
-
+  
+  output$mybutton1 <- renderUI({
+    if (is.null(mydata1())) return(NULL)
+    actionButton("action1", "Show Prediction")
+  })
+  
+  
+  observeEvent(input$action1, {
   # class_model = {"log", "svm", "tree", "rf", "knn"}
   output$knn1 <-renderPlotly({
     get_PCA_plot(tcmr_nonrej_features,tcmr_nonrej_outcome,mydata1(),"TCMR","knn")
@@ -123,6 +139,8 @@ shinyServer(function(input, output) {
   
   output$rfr1<-renderPlotly({
     get_cross_val_plot(nrow(tcmr_nonrej_features), 5, 10, tcmr_nonrej_features, tcmr_nonrej_outcome)
+  })
+  
   })
   
   output$sliders <- renderUI({
