@@ -1142,7 +1142,7 @@ as.data.frame(jaccard_indexes) %>%
   labs(
     title = "Similarity of Selected Pairwise Features from Subsetted Data", 
     subtitle = "Jaccard Index from Repeated Randomised Subsampling (N=10)",
-    caption = str_wrap("Random 95% slices of original gene datasets GSE36059 & GSE48581 were subsampled with stratification i.e. proportion of factor levels equal to original dataset. CPOP was applied to find significant pairwise gene features. This was repeated (N=10) and a Jaccard similarity index was calculated for every combination of subsamples. It appears the gene selection process is not stable.") 
+    caption = str_wrap("Random 95% slices of original gene datasets GSE36059 & GSE48581 were subsampled with stratification i.e. proportion of factor levels equal to the original dataset. The intersection of DE genes was then used in CPOP to find pairwise gene features for each subsample. This was repeated (N=10) and a Jaccard similarity index was calculated for every combination of subsamples to measure the stability of the final gene features selected. It appears the gene selection process is not stable.") 
   )
 
 
