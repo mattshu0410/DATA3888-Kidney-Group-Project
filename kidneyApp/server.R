@@ -143,7 +143,16 @@ shinyServer(function(input, output) {
   
   })
   
-  output$sliders <- renderUI({
+  # mydata1<- reactive({
+  #   File <- input$target_upload
+  #   if (is.null(File))
+  #     return(NULL)
+  #   abc <- read.csv(File$datapath)
+  #   d<-get_pairwise_differences_probe_id(tcmr_nonrej_features,abc)
+  #   return(d)
+  # })
+  
+  output$mysliders <- renderUI({
     a=get_genes_for_sliders(tcmr_nonrej_features)
     sliders <- lapply(1:length(a), function(i) {
       inputName <- a[i]
@@ -153,4 +162,83 @@ shinyServer(function(input, output) {
   })
   
   
+  mydata3<- reactive({
+    d=c()
+    e=c()
+    a=get_genes_for_sliders(tcmr_nonrej_features)
+    for(i in 1:length(a)){
+      d=c(d,a[i])
+      e=c(e,input[[a[i]]])
+    }
+    data3 <-data.frame(Column1 = d,Column2=e)
+    m<-get_pairwise_differences_gene_symbol(tcmr_nonrej_features,data3)
+    return(m)
+  })
+  
+
+  output$knn2 <-renderPlotly({
+     get_PCA_plot(tcmr_nonrej_features,tcmr_nonrej_outcome,mydata3(),"TCMR","knn")
+   })
+  output$log2 <-renderPlotly({
+    get_PCA_plot(tcmr_nonrej_features,tcmr_nonrej_outcome,mydata3(),"TCMR","log")
+  })
+  output$svm2 <-renderPlotly({
+    get_PCA_plot(tcmr_nonrej_features,tcmr_nonrej_outcome,mydata3(),"TCMR","svm")
+  })
+  output$tree2 <-renderPlotly({
+    get_PCA_plot(tcmr_nonrej_features,tcmr_nonrej_outcome,mydata3(),"TCMR","tree")
+  })
+  output$rf2 <-renderPlotly({
+    get_PCA_plot(tcmr_nonrej_features,tcmr_nonrej_outcome,mydata3(),"TCMR","rf")
+  })
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  
+  output$mysliders1 <- renderUI({
+    a=get_genes_for_sliders(abmr_nonrej_features)
+    sliders <- lapply(1:length(a), function(i) {
+      inputName <- a[i]
+      sliderInput(inputName, inputName, min=5, max=20, value=10)
+    })
+    do.call(tagList, sliders)
+  })
+  
+  
+  mydata4<- reactive({
+    d=c()
+    e=c()
+    a=get_genes_for_sliders(abmr_nonrej_features)
+    for(i in 1:length(a)){
+      d=c(d,a[i])
+      e=c(e,input[[a[i]]])
+    }
+    data3 <-data.frame(Column1 = d,Column2=e)
+    m<-get_pairwise_differences_gene_symbol(abmr_nonrej_features,data3)
+    return(m)
+  })
+  
+  
+  output$knn3 <-renderPlotly({
+    get_PCA_plot(abmr_nonrej_features,abmr_nonrej_outcome,mydata4(),"TCMR","knn")
+  })
+  output$log3 <-renderPlotly({
+    get_PCA_plot(abmr_nonrej_features,abmr_nonrej_outcome,mydata4(),"TCMR","log")
+  })
+  output$svm3 <-renderPlotly({
+    get_PCA_plot(abmr_nonrej_features,abmr_nonrej_outcome,mydata4(),"TCMR","svm")
+  })
+  output$tree3 <-renderPlotly({
+    get_PCA_plot(abmr_nonrej_features,abmr_nonrej_outcome,mydata4(),"TCMR","tree")
+  })
+  output$rf3 <-renderPlotly({
+    get_PCA_plot(abmr_nonrej_features,abmr_nonrej_outcome,mydata4(),"TCMR","rf")
+  })
 })
