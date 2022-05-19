@@ -646,3 +646,10 @@ get_cross_val_plot = function(n, cvK, n_sim, X, y,ab) {
     )
   return(ggplotly(p))
 }
+
+get_genes_for_sliders = function(features){
+  names(features) %>%
+  sapply(., function(x){str_split(x,'--')}) %>%
+  unlist() %>%
+  unique()
+}
