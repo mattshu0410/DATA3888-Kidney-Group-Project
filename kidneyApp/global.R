@@ -355,7 +355,7 @@ get_cpop_result = function(exp_matrix1, exp_matrix2, pdata1, pdata2, genes_selec
 abmr_cpop_results = get_cpop_result(eMat_GSE48581, eMat_GSE36059, p_GSE48581, p_GSE36059, genes_selected_ABMR, "ABMR")
 cpop_result = abmr_cpop_results$cpop_result
 abmr_nonrej_features = abmr_cpop_results$features
-abmr_nonrej_outcome = factor(abmr_cpop_results$outcome, levels = c("NR", "ABMR"))
+abmr_nonrej_outcome = abmr_cpop_results$outcome
 
 plot_cpop(cpop_result = cpop_result, type = "ggraph")
 
@@ -364,7 +364,7 @@ plot_cpop(cpop_result = cpop_result, type = "ggraph")
 tcmr_cpop_results = get_cpop_result(eMat_GSE48581, eMat_GSE36059, p_GSE48581, p_GSE36059, genes_selected_TCMR, "TCMR")
 cpop_result = tcmr_cpop_results$cpop_result
 tcmr_nonrej_features = tcmr_cpop_results$features
-tcmr_nonrej_outcome = factor(tcmr_cpop_results$outcome, levels = c("NR", "TCMR"))
+tcmr_nonrej_outcome = tcmr_cpop_results$outcome
 
 plot_cpop(cpop_result = cpop_result, type = "ggraph")
 
@@ -603,6 +603,7 @@ cross_validation = function(n, cvK, n_sim, X, y){
   return(cbind(cv_rep_acc_log, cv_rep_acc_knn, cv_rep_acc_svm, cv_rep_acc_tree, cv_rep_acc_rf))
 }
 
+
 # Calls cross-validation function and then plots results
 # cvK = 5
 # n_sim = 10
@@ -610,7 +611,7 @@ cross_validation = function(n, cvK, n_sim, X, y){
 # y = tcmr_nonrej_outcome
 # n = nrow(X)
 
-get_cross_val_plot = function(n, cvK, n_sim, X, y) {
+get_cross_val_plot = function(n, cvK, n_sim, X, y,ab) {
   
   # Get cross validation accuracy
   acc = cross_validation(n, cvK, n_sim, X, y)
@@ -627,11 +628,16 @@ get_cross_val_plot = function(n, cvK, n_sim, X, y) {
     pivot_longer(cols = 1:5,
                  names_to = "Classifier",
                  values_to = "Accuracy") %>%
+    mutate( type=ifelse(Classifier==ab,
+                        "Highlighted","Normal")) %>%
     ggplot() +
     aes(x = Classifier,
-        y = Accuracy) +
+        y = Accuracy,fill=type, alpha=type) +
     geom_boxplot() +
+    scale_fill_manual(values=c("#377eb8", "grey")) +
+    scale_alpha_manual(values=c(1,0.1)) +
     theme_bw() +
+    theme(legend.position = "none")+
     labs(
       title = paste("Accuracy Comparison of Classifiers on Distinguishing", positive_class, "vs Non-Rejection"),
       subtitle = "Repeated 5-fold Cross Validation (N=10)",
