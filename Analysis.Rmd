@@ -1095,46 +1095,59 @@ print(v1)
 v2 = c("CDH5--MMRN2",       "CFP--KLRB1",        "CXCL10--VAMP5",     "LYN--TCRDV2",       "VEGFC--VWF",       
        "ACSL5--CXCL9",      "C1orf162--VEGFC",   "CFP--TM4SF18",      "ECSCR--IL15",       "GBP4--HLA-DMB",    
        "HLA-DQB1--RARRES3", "HLA-DRA--TRDV3",    "IL15RA--PSMB8",     "KLRD1--LST1"   )
-get_jaccard(v1,v2)
-
+union(v1, v2)
+length(union(v1, v2))
 
 get_jaccard = function(v1, v2) {
     intersect_length = length(intersect(v1, v2))
-    union_length = length(union(v1, v2))
+    #print(paste("Intersect Length", intersect_length))
+    union_length = length(v1) + length(v2) - intersect_length
+    #print(paste("Union Length", union_length))
     jaccard_index = intersect_length/union_length
-    print(jaccard_index)
-    return (jaccard_index)
+    return (as.double(jaccard_index))
 }
 
 ABMR_features = list()
 TCMR_features = list()
 
-for (i in 1:5) {
+for (i in 1:10) {
   subsetted_features = get_subsetted_features (eMat1 = eMat_GSE36059, 
                                                eMat2 = eMat_GSE48581, 
                                                p1 = p_GSE36059, 
                                                p2 = p_GSE48581,
                                                split_prop = 0.95)
-  
-  
   ABMR_features[i] = subsetted_features[1]
   TCMR_features[i] = subsetted_features[2]
   
 }
 
-jaccard_indexes = c()
-
-for (i in 1:length(ABMR_features)){
-  for (j in i+1:length(ABMR_features)){
-    #print(i)
-    #print(j)
-    print(ABMR_features[i])
-    print(ABMR_features[j])
-    jaccard_index = get_jaccard(ABMR_features[i], ABMR_features[j])
-    print(as.character(jaccard_index))
-    append(jaccard_indexes, jaccard_index)
-  }
+jaccard_indexes_abmr = c()
+jaccard_indexes_tcmr = c()
+cmb = t(combn(length(ABMR_features), 2))
+for (i in 1:nrow(cmb)){
+  jaccard_index_abmr = get_jaccard(ABMR_features[[cmb[i,1]]], ABMR_features[[cmb[i,2]]])
+  jaccard_indexes_abmr = append(jaccard_indexes_abmr, jaccard_index_abmr)
+  jaccard_index_tcmr = get_jaccard(TCMR_features[[cmb[i,1]]], TCMR_features[[cmb[i,2]]])
+  jaccard_indexes_tcmr = append(jaccard_indexes_tcmr, jaccard_index_tcmr)
 }
+
+jaccard_indexes = cbind("ABMR" = jaccard_indexes_abmr, "TCMR" = jaccard_indexes_tcmr)
+as.data.frame(jaccard_indexes) %>%
+  pivot_longer(1:2, names_to = "Condition", values_to = "Jaccard Index") %>%
+  ggplot() +
+  aes(x = Condition,
+      y = `Jaccard Index`) +
+  geom_boxplot() +
+  theme_bw() +
+  labs(
+    title = "Similarity of Selected Pairwise Features from Subsetted Data", 
+    subtitle = "Jaccard Index from Repeated Randomised Subsampling (N=10)",
+    caption = str_wrap("Random 95% slices of original gene datasets GSE36059 & GSE48581 were subsampled with stratification i.e. proportion of factor levels equal to original dataset. CPOP was applied to find significant pairwise gene features. This was repeated (N=10) and a Jaccard similarity index was calculated for every combination of subsamples. It appears the gene selection process is not stable.") 
+  )
+
+
+boxplot(jaccard_indexes)
+
 
 #for (i in 2:4){
 #  print(i)
