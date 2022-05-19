@@ -45,10 +45,10 @@ The core utility of our datasets is the similarity between the two. Uniformity b
 "),
               
               h5("GSE36059"),
-              p("The first dataset selected was from a comparative study conducted by the American Society of Nephrology that entails the ‘Disappearance of T Cell-Mediated Rejection Despite Continued Antibody-Mediated Rejection in Late Kidney Transplant Recipients’. The dataset provides a vast amount of data, with 54675 features from 411 samples and clearly defines rejection type.
+              p("The first dataset selected was from a comparative study conducted by the American Society of Nephrology that entails the 'Disappearance of T Cell-Mediated Rejection Despite Continued Antibody-Mediated Rejection in Late Kidney Transplant Recipients'. The dataset provides a vast amount of data, with 54675 features from 411 samples and clearly defines rejection type.
 "),
               h5("GSE48581"),
-              p("The GSE48581 data shows great similarity to our other dataset and hence is highly valid in our model. This dataset was selected from a clinical trial conducted by The American Society of Transplantation and the American Society of Transplant Surgeons. This is the  INTERCOM study involving ‘Potential impact of microarray diagnosis of T cell-mediated rejection in kidney transplants’. INTERCOM 300 included biopsies from 264 patients."),
+              p("The GSE48581 data shows great similarity to our other dataset and hence is highly valid in our model. This dataset was selected from a clinical trial conducted by The American Society of Transplantation and the American Society of Transplant Surgeons. This is the  INTERCOM study involving 'Potential impact of microarray diagnosis of T cell-mediated rejection in kidney transplants'. INTERCOM 300 included biopsies from 264 patients."),
      ),
      
      tabPanel("ABMR Analysis", 
@@ -129,6 +129,7 @@ The core utility of our datasets is the similarity between the two. Uniformity b
                                                                     '.csv'
                                                             )),
                                                   tags$hr(),
+                                                  uiOutput('mybutton')
                                           ),
                                           mainPanel(
                                                   tabsetPanel(type = "tabs",
@@ -228,6 +229,7 @@ The core utility of our datasets is the similarity between the two. Uniformity b
                                               '.csv'
                                       )),
                             tags$hr(),
+                            uiOutput('mybutton1')
                                     ),
                             mainPanel(
                                     tabsetPanel(type = "tabs",
