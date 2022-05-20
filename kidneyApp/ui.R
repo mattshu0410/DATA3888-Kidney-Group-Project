@@ -147,11 +147,11 @@ shinyUI(navbarPage(tags$head(
                                           
                                           mainPanel(
                                                   tabsetPanel(type = "tabs",
-                                                              tabPanel("KNN", plotlyOutput("knn3")),
-                                                              tabPanel("Logistic Regression",plotlyOutput("log3")),
-                                                              tabPanel("Random Forest",plotlyOutput("rf3")),
-                                                              tabPanel("Simple Vector Machine",plotlyOutput("svm3")),
-                                                              tabPanel("Decision Tree",plotlyOutput("tree3"))
+                                                              tabPanel("KNN", plotlyOutput("knn3"),plotlyOutput("knnr2")),
+                                                              tabPanel("Logistic Regression",plotlyOutput("log3"),plotlyOutput("logr2")),
+                                                              tabPanel("Random Forest",plotlyOutput("rf3"),plotlyOutput("rfr2")),
+                                                              tabPanel("Simple Vector Machine",plotlyOutput("svm3"),plotlyOutput("svmr2")),
+                                                              tabPanel("Decision Tree",plotlyOutput("tree3"),plotlyOutput("treer2"))
                                                               
                                                   )
                                                   
@@ -266,11 +266,11 @@ shinyUI(navbarPage(tags$head(
                                   
                                   mainPanel(
                                           tabsetPanel(type = "tabs",
-                                                      tabPanel("KNN", plotlyOutput("knn2")),
-                                                      tabPanel("Logistic Regression",plotlyOutput("log2")),
-                                                      tabPanel("Random Forest",plotlyOutput("rf2")),
-                                                      tabPanel("Simple Vector Machine",plotlyOutput("svm2")),
-                                                      tabPanel("Decision Tree",plotlyOutput("tree2"))
+                                                      tabPanel("KNN", plotlyOutput("knn2"),plotlyOutput("knnr3")),
+                                                      tabPanel("Logistic Regression",plotlyOutput("log2"),plotlyOutput("logr3")),
+                                                      tabPanel("Random Forest",plotlyOutput("rf2"),plotlyOutput("rfr3")),
+                                                      tabPanel("Simple Vector Machine",plotlyOutput("svm2"),plotlyOutput("svmr3")),
+                                                      tabPanel("Decision Tree",plotlyOutput("tree2"),plotlyOutput("treer3"))
                                                       
                                           )
                                           
