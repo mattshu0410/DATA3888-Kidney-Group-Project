@@ -192,16 +192,6 @@ shinyServer(function(input, output) {
     get_PCA_plot(tcmr_nonrej_features,tcmr_nonrej_outcome,mydata3(),"TCMR","rf")
   })
   
-  
-  
-  
-  
-  
-  
-  
-  
-  
-  
   output$mysliders1 <- renderUI({
     a=get_genes_for_sliders(abmr_nonrej_features)
     sliders <- lapply(1:length(a), function(i) {
