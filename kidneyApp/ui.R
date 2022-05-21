@@ -44,7 +44,7 @@ shinyUI(navbarPage(tags$head(
               p("We have utilised numerous datasets in the creation of our model that were collected from different sources, and compiled in tandem to create our tool. The data was utilised for educational purposes, and the app should only be used by clinical researchers. It accepts no liability for the quality or accuracy of its predictions/information.")
      ),
      
-     tabPanel("ABMR Analysis", 
+     tabPanel("Antibody-Mediated Rejection Analysis", 
               
               tabsetPanel(id = "tabset",
                           
@@ -129,7 +129,7 @@ shinyUI(navbarPage(tags$head(
                                                               tabPanel("KNN", plotlyOutput("knn"),plotlyOutput("knnr")),
                                                               tabPanel("Logistic Regression",plotlyOutput("log"),plotlyOutput("logr")),
                                                               tabPanel("Random Forest",plotlyOutput("rf"),plotlyOutput("rfr")),
-                                                              tabPanel("Simple Vector Machine",plotlyOutput("svm"),plotlyOutput("svmr")),
+                                                              tabPanel("Support Vector Machine",plotlyOutput("svm"),plotlyOutput("svmr")),
                                                               tabPanel("Decision Tree",plotlyOutput("tree"),plotlyOutput("treer"))
                                                               
                                                   )
@@ -150,7 +150,7 @@ shinyUI(navbarPage(tags$head(
                                                               tabPanel("KNN", plotlyOutput("knn3"),plotlyOutput("knnr2")),
                                                               tabPanel("Logistic Regression",plotlyOutput("log3"),plotlyOutput("logr2")),
                                                               tabPanel("Random Forest",plotlyOutput("rf3"),plotlyOutput("rfr2")),
-                                                              tabPanel("Simple Vector Machine",plotlyOutput("svm3"),plotlyOutput("svmr2")),
+                                                              tabPanel("Support Vector Machine",plotlyOutput("svm3"),plotlyOutput("svmr2")),
                                                               tabPanel("Decision Tree",plotlyOutput("tree3"),plotlyOutput("treer2"))
                                                               
                                                   )
@@ -164,14 +164,14 @@ shinyUI(navbarPage(tags$head(
      )
      ),
 
-     tabPanel("TCMR Analysis", 
+     tabPanel("T-Cell Mediated Rejection Analysis", 
               
               tabsetPanel(id = "tabset2",
                           
                           tabPanel(
                             title = "Overview",
                             h3("What is TCMR?"),
-                            p("Acute T-Cell mediated rejection (TCMR) occurs when the instersitium is infiltrated by T cells and macrophages, and is characterised by decreased urine output and proteinuria. (Halloran P. F., 2010). TCMR affects about 10-12% of patients and is a less common cause of rejection in comparison to other conditions. This is because TCMR can be more easily controlled with immunosupression. TCMR develops as soon as a week after transplantation, and its risk of rejection reduces over time (Halloran P. F., 2010). As such the risk of rejection due to TCMR peaks in the short term and slowly reduces over time."),
+                            p("Acute T-Cell Mediated Rejection (TCMR) occurs when the instersitium is infiltrated by T cells and macrophages, and is characterised by decreased urine output and proteinuria. (Halloran P. F., 2010). TCMR affects about 10-12% of patients and is a less common cause of rejection in comparison to other conditions. This is because TCMR can be more easily controlled with immunosupression. TCMR develops as soon as a week after transplantation, and its risk of rejection reduces over time (Halloran P. F., 2010). As such the risk of rejection due to TCMR peaks in the short term and slowly reduces over time."),
                             h3("Why Explore TCMR?"),
                             p("Despite the minimal risk of acute kidney rejection arising from pure TCMR, it is still a vital component to analyse in research. Given that T-cells are often involved in the activation of B-cells, it is assumed that ABMR cannot occur without the pre-existence of TCMR. To account for this, this app will also target the identification of genes that are attributed to TCMR. Furthermore, this can also assist clinical researchers in determining new methods to optimise the level of immunosuppressive therapy used for each patient."),
                             h3("Annotation Analysis"),
@@ -248,7 +248,7 @@ shinyUI(navbarPage(tags$head(
                                                 tabPanel("KNN", plotlyOutput("knn1"),plotlyOutput("knnr1")),
                                                 tabPanel("Logistic Regression",plotlyOutput("log1"),plotlyOutput("logr1")),
                                                 tabPanel("Random Forest",plotlyOutput("rf1"),plotlyOutput("rfr1")),
-                                                tabPanel("Simple Vector Machine",plotlyOutput("svm1"),plotlyOutput("svmr1")),
+                                                tabPanel("Support Vector Machine",plotlyOutput("svm1"),plotlyOutput("svmr1")),
                                                 tabPanel("Decision Tree",plotlyOutput("tree1"),plotlyOutput("treer1"))
                                                 
                                     )
@@ -269,7 +269,7 @@ shinyUI(navbarPage(tags$head(
                                                       tabPanel("KNN", plotlyOutput("knn2"),plotlyOutput("knnr3")),
                                                       tabPanel("Logistic Regression",plotlyOutput("log2"),plotlyOutput("logr3")),
                                                       tabPanel("Random Forest",plotlyOutput("rf2"),plotlyOutput("rfr3")),
-                                                      tabPanel("Simple Vector Machine",plotlyOutput("svm2"),plotlyOutput("svmr3")),
+                                                      tabPanel("Support Vector Machine",plotlyOutput("svm2"),plotlyOutput("svmr3")),
                                                       tabPanel("Decision Tree",plotlyOutput("tree2"),plotlyOutput("treer3"))
                                                       
                                           )

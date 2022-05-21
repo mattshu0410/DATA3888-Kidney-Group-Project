@@ -32,7 +32,7 @@ library(randomForest)
 Sys.setenv("VROOM_CONNECTION_SIZE" = 131072 * 5) 
 readr::local_edition(1)
 # Reading in Data
-#GEO_GSE36059 = getGEO("GSE36059")
+GEO_GSE36059 = getGEO("GSE36059")
 GSE36059 = GEO_GSE36059$GSE36059_series_matrix.txt.gz
 
 # Load relevant matrices
@@ -71,7 +71,7 @@ rownames(eMat_GSE36059) = lapply(strsplit(kept_gene_symbols, ' /// ', 1), `[`, 1
 
 ################################## HANDLING GSE48581 DATSET ##################################
 
-#GEO_GSE48581 = getGEO("GSE48581")
+GEO_GSE48581 = getGEO("GSE48581")
 GSE48581 = GEO_GSE48581$GSE48581_series_matrix.txt.gz
 
 # Load relevant matrices
@@ -491,7 +491,7 @@ get_PCA_plot = function(train_features, train_outcomes, test_features, positive_
   # Proper names for classifiers
   classifier_names = as.data.frame(matrix(
     c("log", "svm", "tree", "rf", "knn", "by Logistic Regression",
-      "by Simple Vector Machine", "by Tree", "by Random Forest", "by KNN"),
+      "by Support Vector Machine", "by Tree", "by Random Forest", "by KNN"),
     ncol = 2, byrow=FALSE))
   
   classifier_name = classifier_names$V2[classifier_names$V1 == class_model]
@@ -621,7 +621,7 @@ get_cross_val_plot = function(n, cvK, n_sim, X, y,ab) {
   positive_class = levels(y)[2]
   
   # For pretty renaming
-  names(acc) = c("Logistic Regression", "k-Nearest-Neighbours", "Simple Vector Machine", "Tree", "Random Forest")
+  names(acc) = c("Logistic Regression", "k-Nearest-Neighbours", "Support Vector Machine", "Tree", "Random Forest")
   
   # Producing boxplot
   p = acc %>%
