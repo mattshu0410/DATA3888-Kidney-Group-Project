@@ -430,9 +430,9 @@ make_network_plot = function(geneList){
                 showCategory = 6,
                 categorySize="pvalue", 
                 foldChange = geneList, 
-                cex_label_gene = 0.3,
+                cex_label_gene = 0.5,
                 colorEdge = TRUE,
-                cex_label_category = 0.5
+                cex_label_category = 0.8
                 )
   return(p1)
   
@@ -1306,10 +1306,19 @@ example_slider_input = as.data.frame(
 
 ```{r}
 get_genes_for_sliders = function(features){
-  names(features) %>%
+  gene_names = names(features) %>%
   sapply(., function(x){str_split(x,'--')}) %>%
   unlist() %>%
   unique()
+  entrez_id = bitr(gene_names,
+     fromType = "SYMBOL",
+     toType = "ENTREZID",
+     OrgDb = "org.Hs.eg.db"
+     )$ENTREZID
+  URL = sapply(entrez_id, function(x){
+    paste("https://www.ncbi.nlm.nih.gov/gene/?term=", x, sep = "")
+  })
+  return(as.data.frame(cbind(gene_names, URL)))
 }
 
 ```

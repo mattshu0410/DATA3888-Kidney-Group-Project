@@ -32,7 +32,7 @@ library(randomForest)
 Sys.setenv("VROOM_CONNECTION_SIZE" = 131072 * 5) 
 readr::local_edition(1)
 # Reading in Data
-GEO_GSE36059 = getGEO("GSE36059")
+#GEO_GSE36059 = getGEO("GSE36059")
 GSE36059 = GEO_GSE36059$GSE36059_series_matrix.txt.gz
 
 # Load relevant matrices
@@ -71,7 +71,7 @@ rownames(eMat_GSE36059) = lapply(strsplit(kept_gene_symbols, ' /// ', 1), `[`, 1
 
 ################################## HANDLING GSE48581 DATSET ##################################
 
-GEO_GSE48581 = getGEO("GSE48581")
+#GEO_GSE48581 = getGEO("GSE48581")
 GSE48581 = GEO_GSE48581$GSE48581_series_matrix.txt.gz
 
 # Load relevant matrices
@@ -241,9 +241,9 @@ make_network_plot = function(geneList){
                 showCategory = 6,
                 categorySize="pvalue", 
                 foldChange = geneList, 
-                cex_label_gene = 0.3,
+                cex_label_gene = 0.5,
                 colorEdge = TRUE,
-                cex_label_category = 0.5
+                cex_label_category = 0.8
   )
   return(p1)
   
@@ -653,3 +653,21 @@ get_genes_for_sliders = function(features){
   unlist() %>%
   unique()
 }
+
+# Alternative Function
+#get_genes_for_sliders = function(features){
+#  gene_names = names(features) %>%
+#    sapply(., function(x){str_split(x,'--')}) %>%
+#    unlist() %>%
+#    unique()
+#  entrez_id = bitr(gene_names,
+#                   fromType = "SYMBOL",
+#                   toType = "ENTREZID",
+#                   OrgDb = "org.Hs.eg.db"
+#  )$ENTREZID
+#  URL = sapply(entrez_id, function(x){
+#    paste("https://www.ncbi.nlm.nih.gov/gene/?term=", x, sep = "")
+#  })
+#  return(as.data.frame(cbind(gene_names, URL)))
+#}
+
