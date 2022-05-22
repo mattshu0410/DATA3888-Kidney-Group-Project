@@ -64,7 +64,7 @@ shinyServer(function(input, output) {
           shinyalert("Error", "The second column should be numeric expression set value", type = "error")
           return(NULL)
         }
-        if(ab[i,2]==0)
+        if(ab[i,2]==0||is.na(ab[i,2]))
         {
           shinyalert("Error", "Your file contains missing or null values", type = "error")
           return(NULL)
@@ -155,7 +155,7 @@ shinyServer(function(input, output) {
           shinyalert("Error", "The second column should be numeric expression set value", type = "error")
           return(NULL)
         }
-        if(i==0)
+        if(i==0||is.na(i))
         {
           shinyalert("Error", "Your file contains missing or null values", type = "error")
           return(NULL)
