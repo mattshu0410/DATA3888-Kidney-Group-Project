@@ -9,7 +9,7 @@ options(shiny.maxRequestSize = 100*1024^2)
 
 # Define server logic required to draw a histogram
 shinyServer(function(input, output) {
-
+  
   output$dotPlotABMR <- renderPlot({
     make_dotplot(FC_ABMR_ENTREZID)
   })  
@@ -43,8 +43,11 @@ shinyServer(function(input, output) {
       shinyalert("Error", "Upload a csv or a text file formatted as csv", type = "error")
       return(NULL)
     }
-      
-    ab <- read.csv(File$datapath)
+    tryCatch(ab <- read.csv(File$datapath),
+             error = function(e){
+             shinyalert("Error", "Upload a csv or a text file formatted as csv", type = "error")
+             return(NULL)},)
+    #ab <- read.csv(File$datapath)
     if(ncol(ab)!=2){
       shinyalert("Error", "Your file does not contain the genes necessary. Please ensure you use a complete dataset.", type = "error")
       return(NULL)
@@ -52,17 +55,17 @@ shinyServer(function(input, output) {
       for(i in ab[1]){
         if(is.na(i)){
           shinyalert("Error", "The name of a gene is missing", type = "error")
-        return(NULL)
+          return(NULL)
         }
         if(!is.character(i)){
           shinyalert("Error", "The first column should be name of genes", type = "error")
-        return(NULL)
+          return(NULL)
         }
       }
       for(i in ab[2]){
         if(!is.numeric(i) || !is.double(i)){
           shinyalert("Error", "The second column should be numeric expression set value", type = "error")
-        return(NULL)
+          return(NULL)
         }
         if(i==0||is.na(i))
         {
@@ -81,7 +84,7 @@ shinyServer(function(input, output) {
     actionButton("action", "Show Prediction")
   })
   
-# class_model = {"log", "svm", "tree", "rf", "knn"}
+  # class_model = {"log", "svm", "tree", "rf", "knn"}
   observeEvent(input$action, {
     output$knn <-renderPlotly({
       get_PCA_plot(abmr_nonrej_features,abmr_nonrej_outcome,mydata(),"ABMR","knn")
@@ -141,14 +144,14 @@ shinyServer(function(input, output) {
         }
         if(!is.character(i)){
           shinyalert("Error", "The first column should be name of genes", type = "error")
-        return(NULL)
+          return(NULL)
         }
       }
       for(i in abc[2]){
         if(!is.numeric(i) || !is.double(i))
         {
-        shinyalert("Error", "The second column should be numeric expression set value", type = "error")
-        return(NULL)
+          shinyalert("Error", "The second column should be numeric expression set value", type = "error")
+          return(NULL)
         }
         if(i==0||is.na(i))
         {
@@ -168,44 +171,44 @@ shinyServer(function(input, output) {
   
   
   observeEvent(input$action1, {
-  # class_model = {"log", "svm", "tree", "rf", "knn"}
-  output$knn1 <-renderPlotly({
-    get_PCA_plot(tcmr_nonrej_features,tcmr_nonrej_outcome,mydata1(),"TCMR","knn")
-  })
-  output$log1<-renderPlotly({
-    get_PCA_plot(tcmr_nonrej_features,tcmr_nonrej_outcome,mydata1(),"TCMR","log")
-  }) 
-  output$svm1<-renderPlotly({
-    get_PCA_plot(tcmr_nonrej_features,tcmr_nonrej_outcome,mydata1(),"TCMR","svm")
-  })
-  output$tree1<-renderPlotly({
-    get_PCA_plot(tcmr_nonrej_features,tcmr_nonrej_outcome,mydata1(),"TCMR","tree")
-  })
-  output$rf1<-renderPlotly({
-    get_PCA_plot(tcmr_nonrej_features,tcmr_nonrej_outcome,mydata1(),"TCMR","rf")
-  })
-  
-  
-  output$knnr1<-renderPlotly({
-    get_cross_val_plot(nrow(tcmr_nonrej_features), 5, 10, tcmr_nonrej_features, tcmr_nonrej_outcome,"k-Nearest-Neighbours")
-  })
-  
-  output$logr1<-renderPlotly({
-    get_cross_val_plot(nrow(tcmr_nonrej_features), 5, 10, tcmr_nonrej_features, tcmr_nonrej_outcome,"Logistic Regression")
-  })
-  
-  output$svmr1<-renderPlotly({
-    get_cross_val_plot(nrow(tcmr_nonrej_features), 5, 10, tcmr_nonrej_features, tcmr_nonrej_outcome,"Simple Vector Machine")
-  })
-  
-  output$treer1<-renderPlotly({
-    get_cross_val_plot(nrow(tcmr_nonrej_features), 5, 10, tcmr_nonrej_features, tcmr_nonrej_outcome,"Tree")
-  })
-  
-  output$rfr1<-renderPlotly({
-    get_cross_val_plot(nrow(tcmr_nonrej_features), 5, 10, tcmr_nonrej_features, tcmr_nonrej_outcome,"Random Forest")
-  })
-  
+    # class_model = {"log", "svm", "tree", "rf", "knn"}
+    output$knn1 <-renderPlotly({
+      get_PCA_plot(tcmr_nonrej_features,tcmr_nonrej_outcome,mydata1(),"TCMR","knn")
+    })
+    output$log1<-renderPlotly({
+      get_PCA_plot(tcmr_nonrej_features,tcmr_nonrej_outcome,mydata1(),"TCMR","log")
+    }) 
+    output$svm1<-renderPlotly({
+      get_PCA_plot(tcmr_nonrej_features,tcmr_nonrej_outcome,mydata1(),"TCMR","svm")
+    })
+    output$tree1<-renderPlotly({
+      get_PCA_plot(tcmr_nonrej_features,tcmr_nonrej_outcome,mydata1(),"TCMR","tree")
+    })
+    output$rf1<-renderPlotly({
+      get_PCA_plot(tcmr_nonrej_features,tcmr_nonrej_outcome,mydata1(),"TCMR","rf")
+    })
+    
+    
+    output$knnr1<-renderPlotly({
+      get_cross_val_plot(nrow(tcmr_nonrej_features), 5, 10, tcmr_nonrej_features, tcmr_nonrej_outcome,"k-Nearest-Neighbours")
+    })
+    
+    output$logr1<-renderPlotly({
+      get_cross_val_plot(nrow(tcmr_nonrej_features), 5, 10, tcmr_nonrej_features, tcmr_nonrej_outcome,"Logistic Regression")
+    })
+    
+    output$svmr1<-renderPlotly({
+      get_cross_val_plot(nrow(tcmr_nonrej_features), 5, 10, tcmr_nonrej_features, tcmr_nonrej_outcome,"Simple Vector Machine")
+    })
+    
+    output$treer1<-renderPlotly({
+      get_cross_val_plot(nrow(tcmr_nonrej_features), 5, 10, tcmr_nonrej_features, tcmr_nonrej_outcome,"Tree")
+    })
+    
+    output$rfr1<-renderPlotly({
+      get_cross_val_plot(nrow(tcmr_nonrej_features), 5, 10, tcmr_nonrej_features, tcmr_nonrej_outcome,"Random Forest")
+    })
+    
   })
   
   
@@ -232,10 +235,10 @@ shinyServer(function(input, output) {
     return(m)
   })
   
-
+  
   output$knn2 <-renderPlotly({
-     get_PCA_plot(tcmr_nonrej_features,tcmr_nonrej_outcome,mydata3(),"TCMR","knn")
-   })
+    get_PCA_plot(tcmr_nonrej_features,tcmr_nonrej_outcome,mydata3(),"TCMR","knn")
+  })
   output$log2 <-renderPlotly({
     get_PCA_plot(tcmr_nonrej_features,tcmr_nonrej_outcome,mydata3(),"TCMR","log")
   })
