@@ -3,6 +3,7 @@ library(shinythemes)
 library(shinyjs)
 library(DT)
 library(shinyalert)
+library(prompter)
 
 # Define UI for application that draws a histogram
 shinyUI(navbarPage(tags$head(
@@ -13,7 +14,8 @@ shinyUI(navbarPage(tags$head(
                    fluid=TRUE, 
 
      useShinyjs(),
-     
+     use_prompt(),
+
      tabPanel("Home",
               h2("Introduction"),
               p("Welcome to Kidney C1’s Shiny App! This app is a Kidney rejection analysis tool for pharmaceutical researchers that aims to increase our understanding of the influence of different genes on Kidney graft acceptance or rejection. The tool demonstrates the influence that different genes have on T-Cell mediated and Antibody-Mediated rejection by predicting the rejection of different gene profiles and comparing gene pathways on data analysis plots. By revealing the genes that attribute to ABMR/TCMR and acceptance, this app will provide pharmaceutical researchers with the information necessary to create medication that targets the  gene pathways responsible for rejection. Ultimately by accessing this source of information, researchers can create a less destructive immunosuppressant or new medication that can reduce the effects of rejection ."),
@@ -133,7 +135,7 @@ shinyUI(navbarPage(tags$head(
                           ),
                           
                           tabPanel(
-                                  title = "Prediction",
+                                  title = "Classification",
                                   
                                   tabsetPanel(id = "tabset4",
                                               
@@ -145,14 +147,20 @@ shinyUI(navbarPage(tags$head(
                                                   
                                                   titlePanel("Upload Files"),
                                                   p("Note: Only Affymetrix data will produce valid results."),
+                                                  add_prompt(
                                                   fileInput('target_upload1', 'Choose file to upload',
                                                             accept = c(
                                                                     'text/csv',
                                                                     'text/comma-separated-values',
                                                                     '.csv'
                                                             )),
+                                                  position = "bottom", 
+                                                  size = "medium",
+                                                  message = "Please only upload a csv file or a text file (comma separated values) with Affymetrix data that uses the control probe AFFX-TrpnX-M_at.",
+                                                  ),
                                                   tags$hr(),
-                                                  uiOutput('mybutton')
+                                                  uiOutput('mybutton'),
+                                                  
                                           ),
                                           mainPanel(
                                                   tabsetPanel(type = "tabs",
@@ -284,7 +292,7 @@ shinyUI(navbarPage(tags$head(
                           ),
                           
                           tabPanel(
-                            title = "Prediction",
+                            title = "Classification",
                             tabsetPanel(id = "tabset3",
                             
                             tabPanel(
@@ -296,12 +304,17 @@ shinyUI(navbarPage(tags$head(
                                             
                             titlePanel("Uploading Files"),
                             p("Note: Only Affymetrix data will produce valid results."),
+                            add_prompt(
                             fileInput('target_upload', 'Choose file to upload',
                                       accept = c(
                                               'text/csv',
                                               'text/comma-separated-values',
                                               '.csv'
                                       )),
+                            position = "bottom",
+                            size = "medium",
+                            message = "Please only upload a csv file or a text file (comma separated values) with Affymetrix data that uses the control probe AFFX-TrpnX-M_at."
+                            ),
                             tags$hr(),
                             uiOutput('mybutton1')
                                     ),
