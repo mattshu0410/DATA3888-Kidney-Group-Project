@@ -46,7 +46,9 @@ shinyServer(function(input, output) {
     tryCatch(ab <- read.csv(File$datapath),
              error = function(e){
              shinyalert("Error", "Upload a csv or a text file formatted as csv", type = "error")
-             return(NULL)},)
+             },
+             finally={return(NULL)}
+             )
     #ab <- read.csv(File$datapath)
     if(ncol(ab)!=2){
       shinyalert("Error", "Your file does not contain the genes necessary. Please ensure you use a complete dataset.", type = "error")
