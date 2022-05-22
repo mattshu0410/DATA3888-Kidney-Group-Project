@@ -45,7 +45,7 @@ shinyServer(function(input, output) {
     }
     tryCatch(ab <- read.csv(File$datapath),
              error = function(e){
-             shinyalert("Error", "Upload a csv or a text file formatted as csv", type = "error")
+             shinyalert("Error", "Empty file uploaded", type = "error")
              },
              finally={return(NULL)}
              )
