@@ -49,22 +49,22 @@ shinyServer(function(input, output) {
       shinyalert("Error", "Your file does not contain the genes necessary. Please ensure you use a complete dataset.", type = "error")
       return(NULL)
     }else{
-      for(i in ab[1]){
-        if(is.na(i)){
+      for(i in 1:length(ab[,1])){
+        if(is.na(ab[i,1])){
           shinyalert("Error", "The name of a gene is missing", type = "error")
           return(NULL)
         }
-        if(!is.character(i)){
+        if(!is.character(ab[i,1])){
           shinyalert("Error", "The first column should be name of genes", type = "error")
           return(NULL)
         }
       }
-      for(i in ab[2]){
-        if(!is.numeric(i) || !is.double(i)){
+      for(i in 1:length(ab[,2])){
+        if(!is.numeric(ab[i,2]) || !is.double(ab[i,2])){
           shinyalert("Error", "The second column should be numeric expression set value", type = "error")
           return(NULL)
         }
-        if(i==0||is.na(i))
+        if(ab[i,2]==0)
         {
           shinyalert("Error", "Your file contains missing or null values", type = "error")
           return(NULL)
@@ -139,7 +139,7 @@ shinyServer(function(input, output) {
       shinyalert("Error", "Your file does not contain the genes necessary. Please ensure you use a complete dataset.", type = "error")
       return(NULL)
     }else{
-      for(i in abc[1]){
+      for(i in abc[,1]){
         if(is.na(i)){
           shinyalert("Error", "The name of a gene is missing", type = "error")
           return(NULL)
@@ -149,13 +149,13 @@ shinyServer(function(input, output) {
           return(NULL)
         }
       }
-      for(i in abc[2]){
+      for(i in abc[,2]){
         if(!is.numeric(i) || !is.double(i))
         {
           shinyalert("Error", "The second column should be numeric expression set value", type = "error")
           return(NULL)
         }
-        if(i==0||is.na(i))
+        if(i==0)
         {
           shinyalert("Error", "Your file contains missing or null values", type = "error")
           return(NULL)
@@ -347,5 +347,7 @@ shinyServer(function(input, output) {
   output$rfr2<-renderPlotly({
     get_cross_val_plot(nrow(abmr_nonrej_features), 5, 10, abmr_nonrej_features, abmr_nonrej_outcome,"Random Forest")
   })
+  
+  
   
 })
