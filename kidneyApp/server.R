@@ -39,6 +39,11 @@ shinyServer(function(input, output) {
     File <- input$target_upload1
     if (is.null(File))
       return(NULL)
+    if(grepl(".csv",File$datapath)||grepl(".txt",File$datapath)){
+      shinyalert("Error", "Upload a csv or a text file formetted as csv", type = "error")
+      return(NULL)
+    }
+      
     ab <- read.csv(File$datapath)
     if(ncol(ab)!=2){
       shinyalert("Error", "Your file does not contain the genes necessary. Please ensure you use a complete dataset.", type = "error")
@@ -120,6 +125,10 @@ shinyServer(function(input, output) {
     File <- input$target_upload
     if (is.null(File))
       return(NULL)
+    if(grepl(".csv",File$datapath)||grepl(".txt",File$datapath)){
+      shinyalert("Error", "Upload a csv or a text file formetted as csv", type = "error")
+      return(NULL)
+    }
     abc <- read.csv(File$datapath)
     if(ncol(abc)!=2){
       shinyalert("Error", "Your file does not contain the genes necessary. Please ensure you use a complete dataset.", type = "error")
