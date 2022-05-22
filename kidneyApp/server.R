@@ -10,6 +10,7 @@ options(shiny.maxRequestSize = 100*1024^2)
 # Define server logic required to draw a histogram
 shinyServer(function(input, output) {
   
+  
   output$dotPlotABMR <- renderPlot({
     make_dotplot(FC_ABMR_ENTREZID)
   })  
@@ -221,9 +222,13 @@ shinyServer(function(input, output) {
   
   output$mysliders <- renderUI({
     a=get_genes_for_sliders(tcmr_nonrej_features)
-    sliders <- lapply(1:length(a), function(i) {
-      inputName <- a[i]
-      sliderInput(inputName, inputName, min=5, max=20, value=10)
+    z=c()
+    b<-a$URL
+    z<-a$gene_names
+    sliders <- lapply(1:length(z), function(i) {
+      inputName <- z[i]
+      inputName1<-a(z[i], href=b[i])
+      sliderInput(inputName, inputName1, min=5, max=20, value=10)
     })
     do.call(tagList, sliders)
   })
@@ -232,7 +237,7 @@ shinyServer(function(input, output) {
   mydata3<- reactive({
     d=c()
     e=c()
-    a=get_genes_for_sliders(tcmr_nonrej_features)
+    a=get_genes_for_sliders1(tcmr_nonrej_features)
     for(i in 1:length(a)){
       d=c(d,a[i])
       e=c(e,input[[a[i]]])
@@ -281,9 +286,13 @@ shinyServer(function(input, output) {
   
   output$mysliders1 <- renderUI({
     a=get_genes_for_sliders(abmr_nonrej_features)
-    sliders <- lapply(1:length(a), function(i) {
-      inputName <- a[i]
-      sliderInput(inputName, inputName, min=5, max=20, value=10)
+    z=c()
+    b<-a$URL
+    z<-a$gene_names
+    sliders <- lapply(1:length(z), function(i) {
+      inputName <- z[i]
+      inputName1<-a(z[i], href=b[i])
+      sliderInput(inputName, inputName1, min=5, max=20, value=10)
     })
     do.call(tagList, sliders)
   })
@@ -292,7 +301,7 @@ shinyServer(function(input, output) {
   mydata4<- reactive({
     d=c()
     e=c()
-    a=get_genes_for_sliders(abmr_nonrej_features)
+    a=get_genes_for_sliders1(abmr_nonrej_features)
     for(i in 1:length(a)){
       d=c(d,a[i])
       e=c(e,input[[a[i]]])
