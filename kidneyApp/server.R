@@ -39,7 +39,7 @@ shinyServer(function(input, output) {
     File <- input$target_upload1
     if (is.null(File))
       return(NULL)
-    if(grepl(".csv",File$datapath)||grepl(".txt",File$datapath)){
+    if(!(grepl(".csv",File$datapath)||grepl(".txt",File$datapath))){
       shinyalert("Error", "Upload a csv or a text file formetted as csv", type = "error")
       return(NULL)
     }
@@ -125,7 +125,7 @@ shinyServer(function(input, output) {
     File <- input$target_upload
     if (is.null(File))
       return(NULL)
-    if(grepl(".csv",File$datapath)||grepl(".txt",File$datapath)){
+    if(!(grepl(".csv",File$datapath)||grepl(".txt",File$datapath))){
       shinyalert("Error", "Upload a csv or a text file formetted as csv", type = "error")
       return(NULL)
     }
