@@ -43,12 +43,7 @@ shinyServer(function(input, output) {
       shinyalert("Error", "Upload a csv or a text file formatted as csv", type = "error")
       return(NULL)
     }
-    tryCatch(ab <- read.csv(File$datapath),
-             error = function(e){
-             shinyalert("Error", "Empty file uploaded", type = "error")
-             return(NULL)
-             }
-             )
+    tryCatch({ab <- read.csv(File$datapath)
     if(ncol(ab)!=2){
       shinyalert("Error", "Your file does not contain the genes necessary. Please ensure you use a complete dataset.", type = "error")
       return(NULL)
@@ -77,6 +72,11 @@ shinyServer(function(input, output) {
     }
     a<-get_pairwise_differences_probe_id(abmr_nonrej_features,ab)
     return(a)
+    },
+             error = function(e){
+             shinyalert("Error", "Empty file uploaded", type = "error")
+             return(NULL)
+             })
   })
   
   
@@ -133,12 +133,7 @@ shinyServer(function(input, output) {
       shinyalert("Error", "Upload a csv or a text file formatted as csv", type = "error")
       return(NULL)
     }
-    tryCatch(abc <- read.csv(File$datapath),
-             error = function(e){
-               shinyalert("Error", "Empty file uploaded", type = "error")
-               return(NULL)
-             }
-    )
+    tryCatch({abc <- read.csv(File$datapath)
     if(ncol(abc)!=2){
       shinyalert("Error", "Your file does not contain the genes necessary. Please ensure you use a complete dataset.", type = "error")
       return(NULL)
@@ -168,6 +163,12 @@ shinyServer(function(input, output) {
     }
     d<-get_pairwise_differences_probe_id(tcmr_nonrej_features,abc)
     return(d)
+    },
+             error = function(e){
+               shinyalert("Error", "Empty file uploaded", type = "error")
+               return(NULL)
+             }
+    )
   })
   
   output$mybutton1 <- renderUI({
