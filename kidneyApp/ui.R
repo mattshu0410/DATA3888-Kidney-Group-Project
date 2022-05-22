@@ -323,7 +323,7 @@ shinyUI(navbarPage(tags$head(
                           sidebarLayout(
                                   
                                   sidebarPanel(
-                                          uiOutput("mysliders"),
+                                    uiOutput("mysliders"),
                                   ),
                                   
                                   mainPanel(
