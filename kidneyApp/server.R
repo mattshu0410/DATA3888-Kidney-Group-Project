@@ -46,10 +46,9 @@ shinyServer(function(input, output) {
     tryCatch(ab <- read.csv(File$datapath),
              error = function(e){
              shinyalert("Error", "Empty file uploaded", type = "error")
-             },
-             finally={return(NULL)}
+             return(NULL)
+             }
              )
-    #ab <- read.csv(File$datapath)
     if(ncol(ab)!=2){
       shinyalert("Error", "Your file does not contain the genes necessary. Please ensure you use a complete dataset.", type = "error")
       return(NULL)
@@ -137,8 +136,8 @@ shinyServer(function(input, output) {
     tryCatch(abc <- read.csv(File$datapath),
              error = function(e){
                shinyalert("Error", "Empty file uploaded", type = "error")
-             },
-             finally={return(NULL)}
+               return(NULL)
+             }
     )
     if(ncol(abc)!=2){
       shinyalert("Error", "Your file does not contain the genes necessary. Please ensure you use a complete dataset.", type = "error")
