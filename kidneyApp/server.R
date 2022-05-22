@@ -37,6 +37,32 @@ shinyServer(function(input, output) {
     if (is.null(File))
       return(NULL)
     ab <- read.csv(File$datapath)
+    if(ncol(ab)!=2){
+      shinyalert("Error", "Your file does not contain the genes necessary. Please ensure you use a complete dataset.", type = "error")
+      return(NULL)
+    }else{
+      for(i in ab[1]){
+        if(is.na(i)){
+          shinyalert("Error", "The name of a gene is missing", type = "error")
+        return(NULL)
+        }
+        if(!is.character(i)){
+          shinyalert("Error", "The first column should be name of genes", type = "error")
+        return(NULL)
+        }
+      }
+      for(i in ab[2]){
+        if(!is.numeric(i) || !is.double(i)){
+          shinyalert("Error", "The second column should be numeric expression set value", type = "error")
+        return(NULL)
+        }
+        if(i==0||is.na(i))
+        {
+          shinyalert("Error", "Your file contains missing or null values", type = "error")
+          return(NULL)
+        }
+      }
+    }
     a<-get_pairwise_differences_probe_id(abmr_nonrej_features,ab)
     return(a)
   })
@@ -92,6 +118,33 @@ shinyServer(function(input, output) {
     if (is.null(File))
       return(NULL)
     abc <- read.csv(File$datapath)
+    if(ncol(abc)!=2){
+      shinyalert("Error", "Your file does not contain the genes necessary. Please ensure you use a complete dataset.", type = "error")
+      return(NULL)
+    }else{
+      for(i in abc[1]){
+        if(is.na(i)){
+          shinyalert("Error", "The name of a gene is missing", type = "error")
+          return(NULL)
+        }
+        if(!is.character(i)){
+          shinyalert("Error", "The first column should be name of genes", type = "error")
+        return(NULL)
+        }
+      }
+      for(i in abc[2]){
+        if(!is.numeric(i) || !is.double(i))
+        {
+        shinyalert("Error", "The second column should be numeric expression set value", type = "error")
+        return(NULL)
+        }
+        if(i==0||is.na(i))
+        {
+          shinyalert("Error", "Your file contains missing or null values", type = "error")
+          return(NULL)
+        }
+      }
+    }
     d<-get_pairwise_differences_probe_id(tcmr_nonrej_features,abc)
     return(d)
   })
@@ -143,14 +196,6 @@ shinyServer(function(input, output) {
   
   })
   
-  # mydata1<- reactive({
-  #   File <- input$target_upload
-  #   if (is.null(File))
-  #     return(NULL)
-  #   abc <- read.csv(File$datapath)
-  #   d<-get_pairwise_differences_probe_id(tcmr_nonrej_features,abc)
-  #   return(d)
-  # })
   
   output$mysliders <- renderUI({
     a=get_genes_for_sliders(tcmr_nonrej_features)
