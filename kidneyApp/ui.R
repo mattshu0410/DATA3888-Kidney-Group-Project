@@ -18,7 +18,7 @@ shinyUI(navbarPage(tags$head(
 
      tabPanel("Home",
               h2("Introduction"),
-              p("Welcome to Kidney C1’s Shiny App! This app is a Kidney rejection analysis tool for pharmaceutical researchers that aims to increase our understanding of the influence of different genes on Kidney graft acceptance or rejection. The tool demonstrates the influence that different genes have on T-Cell mediated and Antibody-Mediated rejection by predicting the rejection of different gene profiles and comparing gene pathways on data analysis plots. By revealing the genes that attribute to ABMR/TCMR and acceptance, this app will provide pharmaceutical researchers with the information necessary to create medication that targets the  gene pathways responsible for rejection. Ultimately by accessing this source of information, researchers can create a less destructive immunosuppressant or new medication that can reduce the effects of rejection ."),
+              p("Welcome to Kidney C1’s Shiny App! This app is a kidney rejection analysis tool for pharmaceutical researchers that aims to increase our understanding of the influence of different genes on kidney graft acceptance or rejection. The tool demonstrates the influence that different genes have on T-Cell Mediated and Antibody-Mediated Rejection by predicting the rejection of different gene profiles and comparing gene pathways on data analysis plots. By revealing the genes that attribute to ABMR/TCMR and acceptance, this app will provide pharmaceutical researchers with the information necessary to create medication that targets the  gene pathways responsible for rejection, imcluding a less destructive immunosuppressant, or new medication that can reduce the effects of rejection ."),
               h2("Why?"),
               p("Kidney rejection occurs within 10-15 patients per 100 transplants. Since more than 90,000 patients are in need of a kidney and only 20,000 kidney transplants occur each year, the utility of a kidney rejection analysis tool for pharmaceutical researchers is considerable ('Rejection of a transplanted kidney', 2022).  The creation of a tool that can be used in the drug discovery pipeline to aid the identification of new transcription-specific targets will aid the mitigation of kidney rejection risk by providing information that will improve the treatment of ABMR and TCMR. With the goal of maximising the greater wellbeing of individuals in need of kidney transplants, this tool will provide advancements in knowledge for pharmaceuticals researchers."),
               h3("How to Use"),
@@ -40,7 +40,7 @@ shinyUI(navbarPage(tags$head(
                       
               ),
               h3("Disclaimer"),
-              p("We have utilised numerous datasets in the creation of our model that were collected from different sources, and compiled in tandem to create our tool. The data was utilised for educational purposes, and the app should only be used by clinical researchers. It accepts no liability for the quality or accuracy of its predictions/information."),
+              p("We have utilised numerous datasets in the creation of our model that were collected from different sources, and compiled in tandem to create our tool. The data was utilised for educational purposes, and the app should only be used by pharmaceutical researchers. It accepts no liability for the quality or accuracy of its predictions/information."),
               h3("Datasets Used"),
               h5("GSE36059"),
               p("Halloran et al. collected 703 unselected biopsies 3 days to 35 years after the transplant. Using microarrays and conventional methods they sought to discern the adaptive changes in the alloimmune response over time.  Through conventional methods it was found that 228 biopsy specimens were rejected, where 67 had pure TCMR, 110 AMBR and 28 were mixed between the two. With microarrays it was observed that 228 kidneys were rejected, with 76 pure TCMR, 124 pure ABMR and 28 being mixed. Consequently it was noted that ABMR was strongly associated with increased kidney loss, whilst TCMR was not, and TCMR appeared early but disappeared overtime, whilst ABMR appeared usually a year after transplant."),
@@ -75,7 +75,7 @@ shinyUI(navbarPage(tags$head(
                                         tabPanel(
                                           title = "Network Plot",
                                           includeCSS("www/d.css"),
-                                          h2("Significant Genes selected by Over-representation Analysis (ORA)"),
+                                          h2("Significant Genes Selected by Over-Representation Analysis (ORA)"),
                                           tags$div(class="d1",
                                           tags$div(class="m",
                                           h4("Overlapping genes between human biological states and processes."),
