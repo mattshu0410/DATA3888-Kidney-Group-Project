@@ -28,11 +28,12 @@ library(DT)
 library(rpart)
 library(randomForest)
 
+
 ################################## HANDLING GSE36059 DATASET ##################################
 Sys.setenv("VROOM_CONNECTION_SIZE" = 131072 * 5) 
 readr::local_edition(1)
 # Reading in Data
-#GEO_GSE36059 = getGEO("GSE36059")
+GEO_GSE36059 = getGEO("GSE36059")
 GSE36059 = GEO_GSE36059$GSE36059_series_matrix.txt.gz
 
 # Load relevant matrices
@@ -71,7 +72,7 @@ rownames(eMat_GSE36059) = lapply(strsplit(kept_gene_symbols, ' /// ', 1), `[`, 1
 
 ################################## HANDLING GSE48581 DATSET ##################################
 
-#GEO_GSE48581 = getGEO("GSE48581")
+GEO_GSE48581 = getGEO("GSE48581")
 GSE48581 = GEO_GSE48581$GSE48581_series_matrix.txt.gz
 
 # Load relevant matrices
@@ -647,7 +648,7 @@ get_cross_val_plot = function(n, cvK, n_sim, X, y,ab) {
   return(ggplotly(p))
 }
 
-get_genes_for_sliders = function(features){
+get_genes_for_sliders1 = function(features){
   names(features) %>%
   sapply(., function(x){str_split(x,'--')}) %>%
   unlist() %>%
@@ -655,19 +656,18 @@ get_genes_for_sliders = function(features){
 }
 
 # Alternative Function
-#get_genes_for_sliders = function(features){
-#  gene_names = names(features) %>%
-#    sapply(., function(x){str_split(x,'--')}) %>%
-#    unlist() %>%
-#    unique()
-#  entrez_id = bitr(gene_names,
-#                   fromType = "SYMBOL",
-#                   toType = "ENTREZID",
-#                   OrgDb = "org.Hs.eg.db"
-#  )$ENTREZID
-#  URL = sapply(entrez_id, function(x){
-#    paste("https://www.ncbi.nlm.nih.gov/gene/?term=", x, sep = "")
-#  })
-#  return(as.data.frame(cbind(gene_names, URL)))
-#}
-
+get_genes_for_sliders = function(features){
+ gene_names = names(features) %>%
+   sapply(., function(x){str_split(x,'--')}) %>%
+   unlist() %>%
+   base::unique()
+ entrez_id = bitr(gene_names,
+                  fromType = "SYMBOL",
+                  toType = "ENTREZID",
+                  OrgDb = "org.Hs.eg.db"
+ )$ENTREZID
+ URL = sapply(entrez_id, function(x){
+   paste("https://www.ncbi.nlm.nih.gov/gene/?term=", x, sep = "")
+ })
+ return(as.data.frame(cbind(gene_names, URL)))
+}
