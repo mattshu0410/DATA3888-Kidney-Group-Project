@@ -69,26 +69,56 @@ shinyUI(navbarPage(tags$head(
                             tabsetPanel(
                                         tabPanel(
                                           title = "Network Plot",
-                                          
+                                          includeCSS("www/d.css"),
+                                          h2("Significant Genes selected by Over-representation Analysis (ORA)"),
+                                          tags$div(class="d1",
+                                          tags$div(class="m",
+                                          h4("Overlapping genes between human biological states and processes."),
+                                          p("The network plot shows the intersection of over-represented genes (ORA) between both GSE36059 & GSE48581 after regressions on antibody-mediated rejection versus healthy. Central categories represent the top six (by p.value) significant biological states where size shows the number of representative ORA genes which are present. Notice the large fold changes of genes which participate in Interferon gamma, Interferon alpha, Inflammatory responses and IL6 JAK STAT3 signalling."),
+                                          ),
+                                          tags$div(class = "a",
                                           plotOutput("networkPlotABMR")
-                                          
+                                          ),
+                                        ),
                                         ),
                                         
                                         tabPanel(
                                           title = "Dot Plot",
+                                          includeCSS("www/d.css"),
+                                          h2("Gene Ratio of Significant Biological States/Processes"),
+                                          tags$div(class="d1",
+                                                   tags$div(class="m",
+                                                            h4("Proportional representation of biological states and processes."),
+                                                            p("This dot plot shows all the biological states and process that were found to be significant given the intersection of over-represented genes (ORA) between both GSE36059 & GSE48581. Gene ratio denotes the ratio of relevant ORA genes to all possible relevant genes for a given biological process. Notice that Gamma response and Allograft reject are very well represented."),
+                                                   ),
+                                                   tags$div(class = "a",
+                                                            plotOutput("dotPlotABMR")
+                                                   ),
+                                          ),
                                           
-                                          plotOutput("dotPlotABMR")
                                           
                                         ),
                                         
                                         tabPanel(
                                           title = "Tree Plot",
+                                          includeCSS("www/d.css"),
+                                          h2("Gene Ratio of Significant Biological States/Processes"),
+                                          tags$div(class="d1",
+                                                   tags$div(class="m",
+                                                            h4("Similarity of genes clustered by Jaccard similarity index."),
+                                                            p("This tree plot shows the clustering of ORA genes that represent for significant biological states and processes. The Jaccard index compares sets by taking the ratio of the intersection with the union. The highlight shows a family of process that are closely related."),
+                                                   ),
+                                                   tags$div(class = "a",
+                                                            plotOutput("treePlotABMR")
+                                                   ),
+                                          ),
                                           
-                                          plotOutput("treePlotABMR")
                                         ),
                                         
                                         tabPanel(
                                           title = "KEGG Enrichment Analysis",
+                                          h2("KEGG Pathway Explanation"),
+                                          p("KEGG is a database of biological molecular pathways that allow researchers to ascribe meaningful physiological annotations to genomic information. These images show the significant pathways based on the intersection of over-represented genes (ORA) between both GSE36059 & GSE48581. Where there is a significantly high fold ratio of a gene responsible/related to the transcribing of a biological signalling molecule or messenger, the molecule is marked red. e.g. Notice that there is a consistent representation of MHC-I, MHC-II present which primarily commonly involved in autoimmune dysfunction."),
                                           includeCSS("www/a.css"),
                                           mainPanel(
                                                   tags$div(class = "myclass",
@@ -190,24 +220,56 @@ shinyUI(navbarPage(tags$head(
                             tabsetPanel(
                               tabPanel(
                                 title = "Network Plot",
+                                includeCSS("www/d.css"),
+                                h2("Significant Genes selected by Over-representation Analysis (ORA)"),
+                                tags$div(class="d1",
+                                         tags$div(class="m",
+                                                  h4("Overlapping genes between human biological states and processes."),
+                                                  p("The network plot shows the intersection of over-represented genes (ORA) between both GSE36059 & GSE48581 after regressions on T-cell mediated rejection versus healthy. Central categories represent the top six (by p.value) significant biological states where size shows the number of representative ORA genes which are present. Notice the large fold changes of genes which participate in Interferon gamma, Interferon alpha and Inflammatory responses."),
+                                         ),
+                                         tags$div(class = "a",
+                                                  plotOutput("networkPlotTCMR")
+                                         ),
+                                ),
                                 
-                                plotOutput("networkPlotTCMR")
+            
                               ),
                               
                               tabPanel(
                                 title = "Dot Plot",
-                                
-                                plotOutput("dotPlotTCMR")
+                                includeCSS("www/d.css"),
+                                h2("Gene Ratio of Significant Biological States/Processes"),
+                                tags$div(class="d1",
+                                         tags$div(class="m",
+                                                  h4("Proportional representation of biological states and processes."),
+                                                  p("This dot plot shows all the biological states and process that were found to be significant given the intersection of over-represented genes (ORA) between both GSE36059 & GSE48581. Gene ratio denotes the ratio of relevant ORA genes to all possible relevant genes for a given biological process. Notice that Gamma response and Allograft reject are very well represented."),
+                                         ),
+                                         tags$div(class = "a",
+                                                  plotOutput("dotPlotTCMR")
+                                         ),
+                                ),
                               ),
                               
                               tabPanel(
                                 title = "Tree Plot",
+                                includeCSS("www/d.css"),
+                                h2("Gene Ratio of Significant Biological States/Processes"),
+                                tags$div(class="d1",
+                                         tags$div(class="m",
+                                                  h4("Similarity of genes clustered by Jaccard similarity index."),
+                                                  p("This tree plot shows the clustering of ORA genes that represent for significant biological states and processes. The Jaccard index compares sets by taking the ratio of the intersection with the union. The highlight shows a family of process that are closely related."),
+                                         ),
+                                         tags$div(class = "a",
+                                                  plotOutput("treePlotTCMR")
+                                         ),
+                                ),
                                 
-                                plotOutput("treePlotTCMR")
                               ),
                               
                               tabPanel(
                                 title = "KEGG Enrichment Analysis",
+                                h2("KEGG Pathway Explanation"),
+                                p("KEGG is a database of biological molecular pathways that allow researchers to ascribe meaningful physiological annotations to genomic information. These images show the significant pathways based on the intersection of over-represented genes (ORA) between both GSE36059 & GSE48581. Where there is a significantly high fold ratio of a gene responsible/related to the transcribing of a biological signalling molecule or messenger, the molecule is marked red. e.g. Notice that there is a consistent representation of MHC-I, MHC-II present which primarily commonly involved in autoimmune dysfunction."),
                                         mainPanel(
                                                 tags$div(class = "myclass",
                                                 img(id="1",src = "TCMR1.png", height = 300, width = 300),
