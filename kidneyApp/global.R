@@ -245,7 +245,7 @@ make_network_plot = function(geneList){
                 cex_label_gene = 0.5,
                 colorEdge = TRUE,
                 cex_label_category = 0.8
-  )
+  ) 
   return(p1)
   
 }

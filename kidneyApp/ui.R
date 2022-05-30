@@ -3,6 +3,7 @@ library(shinythemes)
 library(shinyjs)
 library(DT)
 library(shinyalert)
+library(prompter)
 
 # Define UI for application that draws a histogram
 shinyUI(navbarPage(tags$head(
@@ -13,10 +14,13 @@ shinyUI(navbarPage(tags$head(
                    fluid=TRUE, 
 
      useShinyjs(),
-     
+     use_prompt(),
+
      tabPanel("Home",
               h2("Introduction"),
-              p("Welcome to Kidney C1's Shiny app! This tool has been built for clinical researchers to demonstrate the influence that different genes have on T-Cell Mediated Rejection and Antibody-Mediated Rejection, by providing a predictive model that quantifies the risk of a kidney rejection given an individual's gene profile. It also allows researchers to explore significant pathways and gene clusters. Inevitably, this model will provide clinical researchers with the tools necessary to improve kidney acceptance rates and post-transplant quality of life."),
+              p("Welcome to Kidney C1’s Shiny App! This app is a kidney rejection analysis tool for pharmaceutical researchers that aims to increase our understanding of the influence of different genes on kidney graft acceptance or rejection. The tool demonstrates the influence that different genes have on T-Cell Mediated and Antibody-Mediated Rejection by predicting the rejection of different gene profiles and comparing gene pathways on data analysis plots. By revealing the genes that attribute to ABMR/TCMR and acceptance, this app will provide pharmaceutical researchers with the information necessary to create medication that targets the  gene pathways responsible for rejection, imcluding a less destructive immunosuppressant, or new medication that can reduce the effects of rejection ."),
+              h2("Why?"),
+              p("Kidney rejection occurs within 10-15 patients per 100 transplants. Since more than 90,000 patients are in need of a kidney and only 20,000 kidney transplants occur each year, the utility of a kidney rejection analysis tool for pharmaceutical researchers is considerable ('Rejection of a transplanted kidney', 2022).  The creation of a tool that can be used in the drug discovery pipeline to aid the identification of new transcription-specific targets will aid the mitigation of kidney rejection risk by providing information that will improve the treatment of ABMR and TCMR. With the goal of maximising the greater wellbeing of individuals in need of kidney transplants, this tool will provide advancements in knowledge for pharmaceuticals researchers."),
               h3("How to Use"),
               h4("ABMR and TCMR Analysis"),
               p("Both the Antibody-Mediated Rejection Analysis and T-Cell Mediated Rejection Analysis tabs have three different sections to navigate through."),
@@ -35,13 +39,14 @@ shinyUI(navbarPage(tags$head(
                       ),
                       
               ),
+              h3("Disclaimer"),
+              p("We have utilised numerous datasets in the creation of our model that were collected from different sources, and compiled in tandem to create our tool. The data was utilised for educational purposes, and the app should only be used by pharmaceutical researchers. It accepts no liability for the quality or accuracy of its predictions/information."),
               h3("Datasets Used"),
               h5("GSE36059"),
-              p("The first dataset selected was from a comparative study conducted by the American Society of Nephrology that entails the 'Disappearance of T Cell-Mediated Rejection Despite Continued Antibody-Mediated Rejection in Late Kidney Transplant Recipients'. The dataset provides a vast amount of data, with 54675 features from 411 samples, and clearly defines rejection types."),
+              p("Halloran et al. collected 703 unselected biopsies 3 days to 35 years after the transplant. Using microarrays and conventional methods they sought to discern the adaptive changes in the alloimmune response over time.  Through conventional methods it was found that 228 biopsy specimens were rejected, where 67 had pure TCMR, 110 AMBR and 28 were mixed between the two. With microarrays it was observed that 228 kidneys were rejected, with 76 pure TCMR, 124 pure ABMR and 28 being mixed. Consequently it was noted that ABMR was strongly associated with increased kidney loss, whilst TCMR was not, and TCMR appeared early but disappeared overtime, whilst ABMR appeared usually a year after transplant."),
               h5("GSE48581"),
-              p("The GSE48581 data was created as part of a clinical trial conducted by The American Society of Transplantation and the American Society of Transplant Surgeons. This is an INTERCOM study involving 'Potential impact of microarray diagnosis of T cell-mediated rejection in kidney transplants'. It includes biopsies from 264 patients."),
-              h3("Disclaimer"),
-              p("We have utilised numerous datasets in the creation of our model that were collected from different sources, and compiled in tandem to create our tool. The data was utilised for educational purposes, and the app should only be used by clinical researchers. It accepts no liability for the quality or accuracy of its predictions/information.")
+              p("Halloran et al. collected international biopsies samples from from 264 patients. These were analysed using microarrays to test for TCMR and then assigning scores based on an algorithm that was established using a previously collected reference set of 403 biopsies. These scores were also compared to the local histological evaluation. The accuracy between both the reference dataset and the international clinical trial were similar (89) and (87) respectively, and discrepancies arose due to known histology limitations due to biopsies with scarring or inflammation caused by other diseases. However the TMCR score and the histologic TCMR were not associated with kidney loss, yet the TMCR score can provide greater insight in situations where histology is enigmatic or possibly deceptive."),
+        
      ),
      
      tabPanel("Antibody-Mediated Rejection Analysis", 
@@ -54,10 +59,10 @@ shinyUI(navbarPage(tags$head(
                             p("Antibody-Mediated Rejection (ABMR) is a more common form of rejection and presents a significant challenge for long-term graft survival (Kojc & Haler, 2022). ABMR occurs when anti-donor specific antibodies such as anti-HLA antibodies work against the transplanted kidney, and incite its rejection. Unlike TCMR, the risk of kidney rejection from ABMR is a long term concern that increases overtime. Due to advancements in medical technology, ABMR now poses the largest threat to kidney rejection, accounting for graft failure in 64% of rejected transplants. ABMR peaks 5 years after transplantation, and therefore is more difficult to manage.(Kwon, H. et al, 2021)"),
                             h3("Annotation Analysis"),
                             tags$ul(
-                                    tags$li("Network Plot - This plot depicts the biological states and processes of gene profiles through the aggregation of gene data sets."),
-                                    tags$li("Dot plot - Depicts the proportion of significant genes present out of the total count of genes that are associated with the annotated molecular process."),
-                                    tags$li("Tree Plot - The grouping of genes portrays different families of the molecular process. The branches represent the similarity of genes that are markers of multiple processes."),
-                                    tags$li("KEGG Enrichment Analysis - Shows the physiological process of different gene pathways to reveal which molecules are being up-regulated and down-regulated. Furthermore, it generates a visual understanding of how rejection occurs in different pathways."),
+                                    tags$li("Network Plot - This plot depicts the biological states and processes of our gene profiles through the aggregation of gene data sets."),
+                                    tags$li("Dot plot - Depicts the proportion of significant genes present out of the total count of genes associated with the annotated molecular process."),
+                                    tags$li("Tree Plot - The grouping of genes  portrays different families of the molecular process. The branches represent the similarity of genes across multiple molecular processes."),
+                                    tags$li("KEGG Enrichment Analysis - Shows the physiological process of different gene pathways to reveal which functional-level proteins/protein complexes are being upregulated and down regulated. Furthermore, it generates a visual understanding of how rejection occurs in different pathways to aid pharmaceutical researchers understanding."),
                                     
                             ),
                             
@@ -70,7 +75,7 @@ shinyUI(navbarPage(tags$head(
                                         tabPanel(
                                           title = "Network Plot",
                                           includeCSS("www/d.css"),
-                                          h2("Significant Genes selected by Over-representation Analysis (ORA)"),
+                                          h2("Significant Genes Selected by Over-Representation Analysis (ORA)"),
                                           tags$div(class="d1",
                                           tags$div(class="m",
                                           h4("Overlapping genes between human biological states and processes."),
@@ -133,7 +138,7 @@ shinyUI(navbarPage(tags$head(
                           ),
                           
                           tabPanel(
-                                  title = "Prediction",
+                                  title = "Classification",
                                   
                                   tabsetPanel(id = "tabset4",
                                               
@@ -145,14 +150,20 @@ shinyUI(navbarPage(tags$head(
                                                   
                                                   titlePanel("Upload Files"),
                                                   p("Note: Only Affymetrix data will produce valid results."),
+                                                  add_prompt(
                                                   fileInput('target_upload1', 'Choose file to upload',
                                                             accept = c(
                                                                     'text/csv',
                                                                     'text/comma-separated-values',
                                                                     '.csv'
                                                             )),
+                                                  position = "bottom", 
+                                                  size = "medium",
+                                                  message = "Please only upload a csv file or a text file (comma separated values) with Affymetrix data that uses the control probe AFFX-TrpnX-M_at.",
+                                                  ),
                                                   tags$hr(),
-                                                  uiOutput('mybutton')
+                                                  uiOutput('mybutton'),
+                                                  
                                           ),
                                           mainPanel(
                                                   tabsetPanel(type = "tabs",
@@ -201,16 +212,16 @@ shinyUI(navbarPage(tags$head(
                           tabPanel(
                             title = "Overview",
                             h3("What is TCMR?"),
-                            p("Acute T-Cell Mediated Rejection (TCMR) occurs when the instersitium is infiltrated by T cells and macrophages, and is characterised by decreased urine output and proteinuria. (Halloran P. F., 2010). TCMR affects about 10-12% of patients and is a less common cause of rejection in comparison to other conditions. This is because TCMR can be more easily controlled with immunosupression. TCMR develops as soon as a week after transplantation, and its risk of rejection reduces over time (Halloran P. F., 2010). As such the risk of rejection due to TCMR peaks in the short term and slowly reduces over time."),
+                            p("The next rejection type explored through our app is Acute T-Cell mediated rejection (TCMR). TCMR occurs when the instersitium is infiltrated by T cells and macrophages and is characterised by decreased urine output and proteinuria. (Halloran P. F., 2010). TCMR affects about 10-12% of patients and  is a less common cause of rejection in comparison to other conditions. This is because TCMR can be easily controlled as numerous medicinal methods of management have been introduced. TCMR develops as soon as a week after transplantation and its risk of rejection reduces over time (Halloran P. F., 2010). As such the risk of rejection due to TCMR peaks in the short term and slowly reduces over time."),
                             h3("Why Explore TCMR?"),
-                            p("Despite the minimal risk of acute kidney rejection arising from pure TCMR, it is still a vital component to analyse in research. Given that T-cells are often involved in the activation of B-cells, it is assumed that ABMR cannot occur without the pre-existence of TCMR. To account for this, this app will also target the identification of genes that are attributed to TCMR. Furthermore, this can also assist clinical researchers in determining new methods to optimise the level of immunosuppressive therapy used for each patient."),
+                            p("Despite the minimal risk of acute kidney rejection arising from pure TCMR, it is still a vital component to analyse within this report. It is basic biological knowledge that when the immune system is fighting forreign cells, its first response is to mobilise the utility of T-cells. Subsequently, since T-cells are necessary for the activation of B-cells, ABMR cannot occur without the preexistence of TCMR. Accordingly, to account for this ideology, this app will also target the identification of genes that attribute to TCMR, because it is a contributing factor to the inducement of AMBR. Furthermore, this can also assist pharmaceutical  researchers in determining new methods to optimise the level and method of immunosuppressive therapy used  for each patient."),
                             h3("Annotation Analysis"),
                             tags$ul(
-                              tags$li("Network Plot - This plot depicts the biological states and processes of gene profiles through the aggregation of gene data sets."),
-                              tags$li("Dot plot - Depicts the proportion of significant genes present out of the total count of genes that are associated with the annotated molecular process."),
-                              tags$li("Tree Plot - The grouping of genes portrays different families of the molecular process. The branches represent the similarity of genes that are markers of multiple processes."),
-                              tags$li("KEGG Enrichment Analysis - Shows the physiological process of different gene pathways to reveal which molecules are being up-regulated and down-regulated. Furthermore, it generates a visual understanding of how rejection occurs in different pathways."),
-                                    
+                              tags$li("Network Plot - This plot depicts the biological states and processes of our gene profiles through the aggregation of gene data sets."),
+                              tags$li("Dot plot - Depicts the proportion of significant genes present out of the total count of genes associated with the annotated molecular process."),
+                              tags$li("Tree Plot - The grouping of genes  portrays different families of the molecular process. The branches represent the similarity of genes across multiple molecular processes."),
+                              tags$li("KEGG Enrichment Analysis - Shows the physiological process of different gene pathways to reveal which functional-level proteins/protein complexes are being upregulated and down regulated. Furthermore, it generates a visual understanding of how rejection occurs in different pathways to aid pharmaceutical researchers understanding."),
+                              
                             ),
                           ),
                           
@@ -284,7 +295,7 @@ shinyUI(navbarPage(tags$head(
                           ),
                           
                           tabPanel(
-                            title = "Prediction",
+                            title = "Classification",
                             tabsetPanel(id = "tabset3",
                             
                             tabPanel(
@@ -296,12 +307,17 @@ shinyUI(navbarPage(tags$head(
                                             
                             titlePanel("Uploading Files"),
                             p("Note: Only Affymetrix data will produce valid results."),
+                            add_prompt(
                             fileInput('target_upload', 'Choose file to upload',
                                       accept = c(
                                               'text/csv',
                                               'text/comma-separated-values',
                                               '.csv'
                                       )),
+                            position = "bottom",
+                            size = "medium",
+                            message = "Please only upload a csv file or a text file (comma separated values) with Affymetrix data that uses the control probe AFFX-TrpnX-M_at."
+                            ),
                             tags$hr(),
                             uiOutput('mybutton1')
                                     ),
@@ -323,7 +339,7 @@ shinyUI(navbarPage(tags$head(
                           sidebarLayout(
                                   
                                   sidebarPanel(
-                                          uiOutput("mysliders"),
+                                    uiOutput("mysliders"),
                                   ),
                                   
                                   mainPanel(
