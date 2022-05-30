@@ -102,27 +102,27 @@ Entrez Gene ID are unique alphanumeric identifiers for genes and other loci.
 DON'T RUN CODE BELOW. BALANCING DOESN'T WORK.
 
 ```{r}
-balance_data = function(patientData, eMat){
-  # This finds the level which has the minimum count in the dataset
-  min_count = min(table(patientData$diagnosis))
-   # Stratification of Dataset so there is TCMR, ABMR, NR present in same proportions as original
-  positive_TCMR = patientData[which(patientData$diagnosis == "TCMR"),]
-  positive_ABMR = patientData[which(patientData$diagnosis == "ABMR"),]
-  negative = patientData[which(patientData$diagnosis == "NR"),]
-  
-  # Random sampling of subset of dataset (pData and expression matrix)
-  rand_positive_TCMR = slice_sample(positive_TCMR, n = min_count)
-  rand_positive_ABMR = slice_sample(positive_ABMR, n = min_count)
-  rand_negative = slice_sample(negative, n = min_count)
-  combined = rbind(rand_positive_TCMR, rand_positive_ABMR, rand_negative)
-  eMat_combined = eMat[, rownames(combined)]
-  return(list("pData" = combined, "eMat" = eMat_combined))
-}
-
-p_GSE36059 = balance_data(p_GSE36059, eMat_GSE36059)$pData
-eMat_GSE36059 = balance_data(p_GSE36059, eMat_GSE36059)$eMat
-p_GSE48581 = balance_data(p_GSE48581, eMat_GSE48581)$pData
-eMat_GSE48581 = balance_data(p_GSE48581, eMat_GSE48581)$eMat
+#balance_data = function(patientData, eMat){
+#  # This finds the level which has the minimum count in the dataset
+#  min_count = min(table(patientData$diagnosis))
+#   # Stratification of Dataset so there is TCMR, ABMR, NR present in same proportions as original
+#  positive_TCMR = patientData[which(patientData$diagnosis == "TCMR"),]
+#  positive_ABMR = patientData[which(patientData$diagnosis == "ABMR"),]
+#  negative = patientData[which(patientData$diagnosis == "NR"),]
+#  
+#  # Random sampling of subset of dataset (pData and expression matrix)
+#  rand_positive_TCMR = slice_sample(positive_TCMR, n = min_count)
+#  rand_positive_ABMR = slice_sample(positive_ABMR, n = min_count)
+#  rand_negative = slice_sample(negative, n = min_count)
+#  combined = rbind(rand_positive_TCMR, rand_positive_ABMR, rand_negative)
+#  eMat_combined = eMat[, rownames(combined)]
+#  return(list("pData" = combined, "eMat" = eMat_combined))
+#}
+#
+#p_GSE36059 = balance_data(p_GSE36059, eMat_GSE36059)$pData
+#eMat_GSE36059 = balance_data(p_GSE36059, eMat_GSE36059)$eMat
+#p_GSE48581 = balance_data(p_GSE48581, eMat_GSE48581)$pData
+#eMat_GSE48581 = balance_data(p_GSE48581, eMat_GSE48581)$eMat
 
 ```
 
@@ -1111,6 +1111,7 @@ get_subsetted_features = function(eMat1, eMat2, p1, p2, split_prop){
 }
 
 ```
+
 
 ```{r}
 

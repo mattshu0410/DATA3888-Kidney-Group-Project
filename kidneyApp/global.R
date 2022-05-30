@@ -34,6 +34,7 @@ Sys.setenv("VROOM_CONNECTION_SIZE" = 131072 * 5)
 readr::local_edition(1)
 # Reading in Data
 GEO_GSE36059 = getGEO("GSE36059")
+#GEO_GSE36059 = getGEO("GSE36059")
 GSE36059 = GEO_GSE36059$GSE36059_series_matrix.txt.gz
 
 # Load relevant matrices
@@ -73,6 +74,7 @@ rownames(eMat_GSE36059) = lapply(strsplit(kept_gene_symbols, ' /// ', 1), `[`, 1
 ################################## HANDLING GSE48581 DATSET ##################################
 
 GEO_GSE48581 = getGEO("GSE48581")
+#GEO_GSE48581 = getGEO("GSE48581")
 GSE48581 = GEO_GSE48581$GSE48581_series_matrix.txt.gz
 
 # Load relevant matrices
