@@ -1,4 +1,4 @@
-# DATA3888-Kidney-Group-Project
+# Microarray Gene Expression Enrichment Analysis of Kidney Transplant
 
 ## Kidney Transplant Rejection
 Currently approximately 40% of kidney transplants fail within 10 years (Lai et al. 2021). Two prevalent types of CKTR are T-cell mediated rejection (TCMR) and antibody mediated rejection (ABMR). TCMR occurs when the interstitium is infiltrated by T cells and macrophages (P. F. Halloran 2010). On the other hand, ABMR is more common and occurs when donor-specific-antibodies such as anti-HLA antibodies work against the transplanted kidney, and incite its rejection (Zhang 2017).
